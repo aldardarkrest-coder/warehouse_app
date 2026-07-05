@@ -1,0 +1,40 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: سحب الكود
+        uses: actions/checkout@v4
+
+      - name: تثبيت Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.4'
+          channel: 'stable'
+
+      - name: إعداد supabase_config.dart
+        run: |
+          cp lib/config/supabase_config.example.dart lib/config/supabase_config.dart
+
+      - name: تثبيت الاعتماديات
+        run: flutter pub get
+
+      - name: تحليل الكود
+        run: flutter analyze
+
+      - name: بناء APK (Release)
+        run: flutter build apk --release
+
+      - name: رفع APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
