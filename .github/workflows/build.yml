@@ -19,9 +19,17 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: إعداد supabase_config.dart
+      - name: إعداد supabase_config.dart من Secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          cp lib/config/supabase_config.example.dart lib/config/supabase_config.dart
+          cat > lib/config/supabase_config.dart << EOF
+          class SupabaseConfig {
+            static const String supabaseUrl = '$SUPABASE_URL';
+            static const String supabaseAnonKey = '$SUPABASE_ANON_KEY';
+          }
+          EOF
 
       - name: تثبيت الاعتماديات
         run: flutter pub get
