@@ -7,23 +7,26 @@ class InventoryService {
   InventoryService([SupabaseClient? client])
       : _client = client ?? Supabase.instance.client;
 
-  Future<List<InventoryMovement>> getMovements({int limit = 50}) {
-    return _client
+  Future<List<InventoryMovement>> getMovements({int limit = 50}) async {
+    final data = await _client
         .from('inventory_movements')
         .select(
             '*, items(name), warehouses(name), profiles!inventory_movements_created_by_fkey(full_name)')
         .order('created_at', ascending: false)
-        .limit(limit)
-        .then((data) => data.map((e) => InventoryMovement.fromJson(e)).toList());
+        .limit(limit);
+    return data.map((e) => InventoryMovement.fromJson(e)).toList();
   }
 
-  Future<List<InventoryItem>> getStockLevels({String? warehouseId}) {
-    var query = _client
+  Future<List<InventoryItem>> getStockLevels({String? warehouseId}) async {
+    var data = await _client
         .from('inventory_items')
         .select('*, items(name, sku, min_stock_level), warehouses(name)')
         .order('items(name)');
-    if (warehouseId != null) query = query.match({'warehouse_id': warehouseId});
-    return query.then((data) => data.map((e) => InventoryItem.fromJson(e)).toList());
+    var list = data.map((e) => InventoryItem.fromJson(e)).toList();
+    if (warehouseId != null) {
+      list = list.where((item) => item.warehouseId == warehouseId).toList();
+    }
+    return list;
   }
 
   Future<List<InventoryItem>> getLowStock() async {
@@ -35,13 +38,13 @@ class InventoryService {
     return all.where((item) => item.quantity <= 0).toList();
   }
 
-  Future<InventoryMovement> createMovement(InventoryMovement movement) {
-    return _client
+  Future<InventoryMovement> createMovement(InventoryMovement movement) async {
+    final data = await _client
         .from('inventory_movements')
         .insert(movement.toJson())
         .select()
-        .single()
-        .then((data) => InventoryMovement.fromJson(data));
+        .single();
+    return InventoryMovement.fromJson(data);
   }
 
   Future<Map<String, dynamic>> getDashboardStats() async {

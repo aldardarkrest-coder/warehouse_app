@@ -7,44 +7,43 @@ class ItemService {
   ItemService([SupabaseClient? client])
       : _client = client ?? Supabase.instance.client;
 
-  Future<List<Item>> getAll({bool onlyActive = false}) {
-    var query = _client
+  Future<List<Item>> getAll({bool onlyActive = false}) async {
+    final data = await _client
         .from('items')
         .select('*, categories(name)')
         .order('name');
-    if (onlyActive) query = query.match({'is_active': true});
-    return query.then((data) => data.map((e) => Item.fromJson(e)).toList());
+    var list = data.map((e) => Item.fromJson(e)).toList();
+    if (onlyActive) list = list.where((i) => i.isActive).toList();
+    return list;
   }
 
-  Future<Item> getById(String id) {
-    return _client
+  Future<Item> getById(String id) async {
+    final data = await _client
         .from('items')
-        .select('*, categories(name)')
-        .match({'id': id})
-        .single()
-        .then((data) => Item.fromJson(data));
+        .select('*, categories(name)');
+    return Item.fromJson(data.firstWhere((r) => r['id'] == id));
   }
 
-  Future<Item> create(Item item) {
-    return _client
+  Future<Item> create(Item item) async {
+    final data = await _client
         .from('items')
         .insert(item.toJson())
         .select()
-        .single()
-        .then((data) => Item.fromJson(data));
+        .single();
+    return Item.fromJson(data);
   }
 
-  Future<Item> update(String id, Item item) {
-    return _client
+  Future<Item> update(String id, Item item) async {
+    final data = await _client
         .from('items')
         .update(item.toJson())
         .match({'id': id})
         .select()
-        .single()
-        .then((data) => Item.fromJson(data));
+        .single();
+    return Item.fromJson(data);
   }
 
-  Future<void> delete(String id) {
-    return _client.from('items').delete().match({'id': id});
+  Future<void> delete(String id) async {
+    await _client.from('items').delete().match({'id': id});
   }
 }

@@ -7,41 +7,38 @@ class CustomerService {
   CustomerService([SupabaseClient? client])
       : _client = client ?? Supabase.instance.client;
 
-  Future<List<Customer>> getAll({bool onlyActive = false}) {
-    var query = _client.from('customers').select().order('name');
-    if (onlyActive) query = query.match({'is_active': true});
-    return query.then((data) => data.map((e) => Customer.fromJson(e)).toList());
+  Future<List<Customer>> getAll({bool onlyActive = false}) async {
+    final data = await _client.from('customers').select().order('name');
+    var list = data.map((e) => Customer.fromJson(e)).toList();
+    if (onlyActive) list = list.where((c) => c.isActive).toList();
+    return list;
   }
 
-  Future<Customer> getById(String id) {
-    return _client
-        .from('customers')
-        .select()
-        .match({'id': id})
-        .single()
-        .then((data) => Customer.fromJson(data));
+  Future<Customer> getById(String id) async {
+    final data = await _client.from('customers').select();
+    return Customer.fromJson(data.firstWhere((r) => r['id'] == id));
   }
 
-  Future<Customer> create(Customer customer) {
-    return _client
+  Future<Customer> create(Customer customer) async {
+    final data = await _client
         .from('customers')
         .insert(customer.toJson())
         .select()
-        .single()
-        .then((data) => Customer.fromJson(data));
+        .single();
+    return Customer.fromJson(data);
   }
 
-  Future<Customer> update(String id, Customer customer) {
-    return _client
+  Future<Customer> update(String id, Customer customer) async {
+    final data = await _client
         .from('customers')
         .update(customer.toJson())
         .match({'id': id})
         .select()
-        .single()
-        .then((data) => Customer.fromJson(data));
+        .single();
+    return Customer.fromJson(data);
   }
 
-  Future<void> delete(String id) {
-    return _client.from('customers').delete().match({'id': id});
+  Future<void> delete(String id) async {
+    await _client.from('customers').delete().match({'id': id});
   }
 }
