@@ -22,17 +22,17 @@ class InventoryService {
         .from('inventory_items')
         .select('*, items(name, sku, min_stock_level), warehouses(name)')
         .order('items(name)');
-    if (warehouseId != null) query = query.filter('warehouse_id', 'eq', warehouseId);
+    if (warehouseId != null) query = query.match({'warehouse_id': warehouseId});
     return query.then((data) => data.map((e) => InventoryItem.fromJson(e)).toList());
   }
 
-  Future<List<InventoryItem>> getLowStock() {
-    return _client
+  Future<List<InventoryItem>> getLowStock() async {
+    final all = await _client
         .from('inventory_items')
         .select('*, items!inner(name, sku, min_stock_level), warehouses(name)')
-        .filter('quantity', 'lte', 0)
         .order('items(name)')
         .then((data) => data.map((e) => InventoryItem.fromJson(e)).toList());
+    return all.where((item) => item.quantity <= 0).toList();
   }
 
   Future<InventoryMovement> createMovement(InventoryMovement movement) {
@@ -55,16 +55,16 @@ class InventoryService {
         .limit(10)
         .then((data) => data.map((e) => InventoryMovement.fromJson(e)).toList());
 
-    final lowStockData = await _client
+    final allStock = await _client
         .from('inventory_items')
         .select('*, items!inner(name, sku, min_stock_level), warehouses(name)')
-        .lte('quantity', 0);
+        .then((data) => data.map((e) => InventoryItem.fromJson(e)).toList());
 
     return {
       'total_items': (totalItems as List).length,
       'total_warehouses': (totalWarehouses as List).length,
       'recent_movements': recentMovements,
-      'low_stock_count': lowStockData.length,
+      'low_stock_count': allStock.where((s) => s.quantity <= 0).length,
     };
   }
 }

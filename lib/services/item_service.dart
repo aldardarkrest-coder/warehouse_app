@@ -12,7 +12,7 @@ class ItemService {
         .from('items')
         .select('*, categories(name)')
         .order('name');
-    if (onlyActive) query = query.filter('is_active', 'eq', true);
+    if (onlyActive) query = query.match({'is_active': true});
     return query.then((data) => data.map((e) => Item.fromJson(e)).toList());
   }
 
@@ -20,7 +20,7 @@ class ItemService {
     return _client
         .from('items')
         .select('*, categories(name)')
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .single()
         .then((data) => Item.fromJson(data));
   }
@@ -38,13 +38,13 @@ class ItemService {
     return _client
         .from('items')
         .update(item.toJson())
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .select()
         .single()
         .then((data) => Item.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('items').delete().filter('id', 'eq', id);
+    return _client.from('items').delete().match({'id': id});
   }
 }

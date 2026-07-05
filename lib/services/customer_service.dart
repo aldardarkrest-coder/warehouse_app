@@ -9,7 +9,7 @@ class CustomerService {
 
   Future<List<Customer>> getAll({bool onlyActive = false}) {
     var query = _client.from('customers').select().order('name');
-    if (onlyActive) query = query.filter('is_active', 'eq', true);
+    if (onlyActive) query = query.match({'is_active': true});
     return query.then((data) => data.map((e) => Customer.fromJson(e)).toList());
   }
 
@@ -17,7 +17,7 @@ class CustomerService {
     return _client
         .from('customers')
         .select()
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .single()
         .then((data) => Customer.fromJson(data));
   }
@@ -35,13 +35,13 @@ class CustomerService {
     return _client
         .from('customers')
         .update(customer.toJson())
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .select()
         .single()
         .then((data) => Customer.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('customers').delete().filter('id', 'eq', id);
+    return _client.from('customers').delete().match({'id': id});
   }
 }

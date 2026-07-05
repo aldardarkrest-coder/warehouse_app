@@ -9,7 +9,7 @@ class SupplierService {
 
   Future<List<Supplier>> getAll({bool onlyActive = false}) {
     var query = _client.from('suppliers').select().order('name');
-    if (onlyActive) query = query.filter('is_active', 'eq', true);
+    if (onlyActive) query = query.match({'is_active': true});
     return query.then((data) => data.map((e) => Supplier.fromJson(e)).toList());
   }
 
@@ -17,7 +17,7 @@ class SupplierService {
     return _client
         .from('suppliers')
         .select()
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .single()
         .then((data) => Supplier.fromJson(data));
   }
@@ -35,13 +35,13 @@ class SupplierService {
     return _client
         .from('suppliers')
         .update(supplier.toJson())
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .select()
         .single()
         .then((data) => Supplier.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('suppliers').delete().filter('id', 'eq', id);
+    return _client.from('suppliers').delete().match({'id': id});
   }
 }

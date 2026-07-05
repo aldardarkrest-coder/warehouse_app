@@ -9,7 +9,7 @@ class WarehouseService {
 
   Future<List<Warehouse>> getAll({bool onlyActive = false}) {
     var query = _client.from('warehouses').select().order('name');
-    if (onlyActive) query = query.filter('is_active', 'eq', true);
+    if (onlyActive) query = query.match({'is_active': true});
     return query.then((data) => data.map((e) => Warehouse.fromJson(e)).toList());
   }
 
@@ -17,7 +17,7 @@ class WarehouseService {
     return _client
         .from('warehouses')
         .select()
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .single()
         .then((data) => Warehouse.fromJson(data));
   }
@@ -35,13 +35,13 @@ class WarehouseService {
     return _client
         .from('warehouses')
         .update(warehouse.toJson())
-        .filter('id', 'eq', id)
+        .match({'id': id})
         .select()
         .single()
         .then((data) => Warehouse.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('warehouses').delete().filter('id', 'eq', id);
+    return _client.from('warehouses').delete().match({'id': id});
   }
 }
