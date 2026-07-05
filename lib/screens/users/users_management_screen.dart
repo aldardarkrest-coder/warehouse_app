@@ -34,7 +34,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Future<void> _updateRole(String userId, String newRole) async {
     try {
       final client = Supabase.instance.client;
-      await client.from('profiles').update({'role': newRole}).eq('id', userId);
+      await client.from('profiles').update({'role': newRole}).filter('id', 'eq', userId);
       _load();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -44,7 +44,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
   Future<void> _toggleActive(String userId, bool isActive) async {
     try {
       final client = Supabase.instance.client;
-      await client.from('profiles').update({'is_active': !isActive}).eq('id', userId);
+      await client.from('profiles').update({'is_active': !isActive}).filter('id', 'eq', userId);
       _load();
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));

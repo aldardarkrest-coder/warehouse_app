@@ -4,7 +4,6 @@ import '../../services/inventory_service.dart';
 import '../../models/inventory_movement.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
-import 'movement_form_screen.dart';
 
 class MovementsListScreen extends StatefulWidget {
   final AuthService authService;
@@ -45,9 +44,9 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
               final m = _movements![i];
               return Card(child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: m.type == MovementType.in_
-                      ? Colors.green.withOpacity(0.2)
-                      : m.type == MovementType.out ? Colors.red.withOpacity(0.2) : Colors.orange.withOpacity(0.2),
+                  backgroundColor: (m.type == MovementType.in_
+                      ? Colors.green
+                      : m.type == MovementType.out ? Colors.red : Colors.orange).withValues(alpha: 0.2),
                   child: Icon(
                     m.type == MovementType.in_ ? Icons.add_circle
                         : m.type == MovementType.out ? Icons.remove_circle : Icons.swap_horiz,

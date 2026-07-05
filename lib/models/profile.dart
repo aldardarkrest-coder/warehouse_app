@@ -1,11 +1,11 @@
-enum UserRole { admin, warehouse_manager, employee }
+enum UserRole { admin, warehouseManager, employee }
 
 extension UserRoleExtension on UserRole {
   String get value {
     switch (this) {
       case UserRole.admin:
         return 'admin';
-      case UserRole.warehouse_manager:
+      case UserRole.warehouseManager:
         return 'warehouse_manager';
       case UserRole.employee:
         return 'employee';
@@ -16,7 +16,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.admin:
         return 'مدير النظام';
-      case UserRole.warehouse_manager:
+      case UserRole.warehouseManager:
         return 'مدير مستودع';
       case UserRole.employee:
         return 'موظف';
@@ -28,7 +28,7 @@ extension UserRoleExtension on UserRole {
       case 'admin':
         return UserRole.admin;
       case 'warehouse_manager':
-        return UserRole.warehouse_manager;
+        return UserRole.warehouseManager;
       default:
         return UserRole.employee;
     }

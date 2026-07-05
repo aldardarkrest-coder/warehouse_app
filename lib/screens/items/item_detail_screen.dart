@@ -74,7 +74,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ..._stockLevels!.map((s) => Card(
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: s.isLowStock ? Colors.red.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                  backgroundColor: (s.isLowStock ? Colors.red : Colors.green).withValues(alpha: 0.2),
                   child: Icon(s.isLowStock ? Icons.warning : Icons.check_circle,
                       color: s.isLowStock ? Colors.red : Colors.green),
                 ),

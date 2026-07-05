@@ -125,14 +125,14 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _itemId, decoration: const InputDecoration(labelText: 'الصنف'),
+            initialValue: _itemId, decoration: const InputDecoration(labelText: 'الصنف'),
             items: _items.map((i) => DropdownMenuItem(value: i.id, child: Text('${i.name} (${i.sku})'))).toList(),
             onChanged: (v) => setState(() => _itemId = v),
             validator: (v) => v == null ? 'يرجى اختيار صنف' : null,
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _warehouseId, decoration: const InputDecoration(labelText: _isTransfer ? 'من مستودع' : 'المستودع'),
+            initialValue: _warehouseId, decoration: const InputDecoration(labelText: _isTransfer ? 'من مستودع' : 'المستودع'),
             items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
             onChanged: (v) => setState(() => _warehouseId = v),
             validator: (v) => v == null ? 'يرجى اختيار مستودع' : null,
@@ -140,7 +140,7 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
           if (_isTransfer) ...[
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _destinationWarehouseId, decoration: const InputDecoration(labelText: 'إلى مستودع'),
+              initialValue: _destinationWarehouseId, decoration: const InputDecoration(labelText: 'إلى مستودع'),
               items: _warehouses.where((w) => w.id != _warehouseId).map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
               onChanged: (v) => setState(() => _destinationWarehouseId = v),
               validator: (v) => v == null ? 'يرجى اختيار مستودع الوجهة' : null,
@@ -155,7 +155,8 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
               return null;
             }),
           const SizedBox(height: 16),
-          TextFormField(controller: _refTypeController, decoration: const InputDecoration(labelText: 'نوع المرجع (اختياري)'),
+          TextFormField(controller: _refTypeController, decoration: const InputDecoration(
+            labelText: 'نوع المرجع (اختياري)',
             hintText: 'مثل: أمر شراء، أمر بيع'),
           const SizedBox(height: 16),
           TextFormField(controller: _refIdController, decoration: const InputDecoration(labelText: 'رقم المرجع (اختياري)')),

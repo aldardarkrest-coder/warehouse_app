@@ -52,7 +52,7 @@ class _SuppliersListScreenState extends State<SuppliersListScreen> {
                 final s = _suppliers![i];
                 return Card(child: ListTile(
                   leading: CircleAvatar(child: Text(s.name.isNotEmpty ? s.name[0].toUpperCase() : '?')),
-                  title: Text(s.name), subtitle: s.phone ?? s.email,
+                  title: Text(s.name), subtitle: Text(s.phone ?? s.email ?? ''),
                   trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                     IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _navigateToForm(supplier: s)),
                     IconButton(icon: const Icon(Icons.delete_outlined, color: Colors.red), onPressed: () => _delete(s)),

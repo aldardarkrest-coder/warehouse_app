@@ -70,7 +70,7 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
                   child: ListTile(
                     leading: CircleAvatar(child: Icon(w.isActive ? Icons.warehouse : Icons.block, color: w.isActive ? null : Colors.red)),
                     title: Text(w.name),
-                    subtitle: w.location ?? w.description,
+                    subtitle: Text(w.location ?? w.description ?? ''),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

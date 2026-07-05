@@ -46,7 +46,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
               final c = _customers![i];
               return Card(child: ListTile(
                 leading: CircleAvatar(child: Text(c.name.isNotEmpty ? c.name[0].toUpperCase() : '?')),
-                title: Text(c.name), subtitle: c.phone ?? c.email,
+                title: Text(c.name), subtitle: Text(c.phone ?? c.email ?? ''),
                 trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                   IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _navigateToForm(customer: c)),
                   IconButton(icon: const Icon(Icons.delete_outlined, color: Colors.red), onPressed: () => _delete(c)),

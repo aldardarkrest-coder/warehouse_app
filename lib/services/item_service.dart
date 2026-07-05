@@ -4,14 +4,15 @@ import '../models/item.dart';
 class ItemService {
   final SupabaseClient _client;
 
-  ItemService(this._client);
+  ItemService([SupabaseClient? client])
+      : _client = client ?? Supabase.instance.client;
 
   Future<List<Item>> getAll({bool onlyActive = false}) {
     var query = _client
         .from('items')
         .select('*, categories(name)')
         .order('name');
-    if (onlyActive) query = query.eq('is_active', true);
+    if (onlyActive) query = query.filter('is_active', 'eq', true);
     return query.then((data) => data.map((e) => Item.fromJson(e)).toList());
   }
 
@@ -19,7 +20,7 @@ class ItemService {
     return _client
         .from('items')
         .select('*, categories(name)')
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .single()
         .then((data) => Item.fromJson(data));
   }
@@ -37,22 +38,13 @@ class ItemService {
     return _client
         .from('items')
         .update(item.toJson())
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .select()
         .single()
         .then((data) => Item.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('items').delete().eq('id', id);
-  }
-
-  Future<Item> getBySku(String sku) {
-    return _client
-        .from('items')
-        .select()
-        .eq('sku', sku)
-        .maybeSingle()
-        .then((data) => data != null ? Item.fromJson(data) : throw Exception('Item not found'));
+    return _client.from('items').delete().filter('id', 'eq', id);
   }
 }

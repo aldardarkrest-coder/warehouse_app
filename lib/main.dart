@@ -9,7 +9,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
-    anonKey: SupabaseConfig.supabaseAnonKey,
+    publishableKey: SupabaseConfig.supabaseAnonKey,
   );
   runApp(const WarehouseApp());
 }
@@ -25,7 +25,6 @@ class WarehouseApp extends StatelessWidget {
       theme: ThemeData(
         colorSchemeSeed: Colors.indigo,
         useMaterial3: true,
-        fontFamily: 'Cairo',
       ),
       home: const AuthGate(),
     );
@@ -46,10 +45,12 @@ class _AuthGateState extends State<AuthGate> {
   @override
   void initState() {
     super.initState();
-    _authService.authStateChanges.listen((event) {
+    _authService.authStateChanges.listen((_) {
       if (mounted) setState(() => _isChecking = false);
     });
-    Future.delayed(Duration.zero, () => setState(() => _isChecking = false));
+    Future.delayed(Duration.zero, () {
+      if (mounted) setState(() => _isChecking = false);
+    });
   }
 
   @override

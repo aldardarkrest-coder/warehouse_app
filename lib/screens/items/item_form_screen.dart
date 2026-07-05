@@ -101,7 +101,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
                 validator: (v) => v == null || v.trim().isEmpty ? 'رمز SKU مطلوب' : null),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: _categoryId,
+                initialValue: _categoryId,
                 decoration: const InputDecoration(labelText: 'التصنيف'),
                 items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                 onChanged: (v) => setState(() => _categoryId = v),

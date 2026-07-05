@@ -4,11 +4,12 @@ import '../models/supplier.dart';
 class SupplierService {
   final SupabaseClient _client;
 
-  SupplierService(this._client);
+  SupplierService([SupabaseClient? client])
+      : _client = client ?? Supabase.instance.client;
 
   Future<List<Supplier>> getAll({bool onlyActive = false}) {
     var query = _client.from('suppliers').select().order('name');
-    if (onlyActive) query = query.eq('is_active', true);
+    if (onlyActive) query = query.filter('is_active', 'eq', true);
     return query.then((data) => data.map((e) => Supplier.fromJson(e)).toList());
   }
 
@@ -16,7 +17,7 @@ class SupplierService {
     return _client
         .from('suppliers')
         .select()
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .single()
         .then((data) => Supplier.fromJson(data));
   }
@@ -34,13 +35,13 @@ class SupplierService {
     return _client
         .from('suppliers')
         .update(supplier.toJson())
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .select()
         .single()
         .then((data) => Supplier.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('suppliers').delete().eq('id', id);
+    return _client.from('suppliers').delete().filter('id', 'eq', id);
   }
 }

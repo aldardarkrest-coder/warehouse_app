@@ -4,11 +4,12 @@ import '../models/category.dart';
 class CategoryService {
   final SupabaseClient _client;
 
-  CategoryService(this._client);
+  CategoryService([SupabaseClient? client])
+      : _client = client ?? Supabase.instance.client;
 
   Future<List<Category>> getAll({bool onlyActive = false}) {
     var query = _client.from('categories').select().order('name');
-    if (onlyActive) query = query.eq('is_active', true);
+    if (onlyActive) query = query.filter('is_active', 'eq', true);
     return query.then((data) => data.map((e) => Category.fromJson(e)).toList());
   }
 
@@ -16,7 +17,7 @@ class CategoryService {
     return _client
         .from('categories')
         .select()
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .single()
         .then((data) => Category.fromJson(data));
   }
@@ -34,13 +35,13 @@ class CategoryService {
     return _client
         .from('categories')
         .update(category.toJson())
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .select()
         .single()
         .then((data) => Category.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('categories').delete().eq('id', id);
+    return _client.from('categories').delete().filter('id', 'eq', id);
   }
 }

@@ -4,11 +4,12 @@ import '../models/warehouse.dart';
 class WarehouseService {
   final SupabaseClient _client;
 
-  WarehouseService(this._client);
+  WarehouseService([SupabaseClient? client])
+      : _client = client ?? Supabase.instance.client;
 
   Future<List<Warehouse>> getAll({bool onlyActive = false}) {
     var query = _client.from('warehouses').select().order('name');
-    if (onlyActive) query = query.eq('is_active', true);
+    if (onlyActive) query = query.filter('is_active', 'eq', true);
     return query.then((data) => data.map((e) => Warehouse.fromJson(e)).toList());
   }
 
@@ -16,7 +17,7 @@ class WarehouseService {
     return _client
         .from('warehouses')
         .select()
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .single()
         .then((data) => Warehouse.fromJson(data));
   }
@@ -34,13 +35,13 @@ class WarehouseService {
     return _client
         .from('warehouses')
         .update(warehouse.toJson())
-        .eq('id', id)
+        .filter('id', 'eq', id)
         .select()
         .single()
         .then((data) => Warehouse.fromJson(data));
   }
 
   Future<void> delete(String id) {
-    return _client.from('warehouses').delete().eq('id', id);
+    return _client.from('warehouses').delete().filter('id', 'eq', id);
   }
 }
