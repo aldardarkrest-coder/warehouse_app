@@ -34,6 +34,14 @@ jobs:
       - name: تثبيت الاعتماديات
         run: flutter pub get
 
+      - name: إنشاء منصة Android
+        run: |
+          GEN_DIR=/tmp/flutter_gen_$$
+          mkdir -p $GEN_DIR && cd $GEN_DIR
+          flutter create --project-name warehouse_app --platforms=android .
+          cp -r android $GITHUB_WORKSPACE/
+          rm -rf $GEN_DIR
+
       - name: تحليل الكود
         run: flutter analyze
 
