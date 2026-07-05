@@ -73,8 +73,11 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         minStockLevel: double.tryParse(_minStockController.text) ?? 0,
         isActive: _isActive,
       );
-      if (widget.item != null) await service.update(widget.item!.id!, item);
-      else await service.create(item);
+      if (widget.item != null) {
+        await service.update(widget.item!.id!, item);
+      } else {
+        await service.create(item);
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));

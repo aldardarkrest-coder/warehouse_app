@@ -51,8 +51,11 @@ class _WarehouseFormScreenState extends State<WarehouseFormScreen> {
         description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
         isActive: _isActive,
       );
-      if (widget.warehouse != null) await service.update(widget.warehouse!.id!, w);
-      else await service.create(w);
+      if (widget.warehouse != null) {
+        await service.update(widget.warehouse!.id!, w);
+      } else {
+        await service.create(w);
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));

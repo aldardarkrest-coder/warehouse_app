@@ -125,7 +125,7 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            initialValue: _itemId, decoration: InputDecoration(labelText: 'الصنف'),
+            initialValue: _itemId, decoration: const InputDecoration(labelText: 'الصنف'),
             items: _items.map((i) => DropdownMenuItem(value: i.id, child: Text('${i.name} (${i.sku})'))).toList(),
             onChanged: (v) => setState(() => _itemId = v),
             validator: (v) => v == null ? 'يرجى اختيار صنف' : null,
@@ -140,7 +140,7 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
           if (_isTransfer) ...[
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _destinationWarehouseId, decoration: InputDecoration(labelText: 'إلى مستودع'),
+              initialValue: _destinationWarehouseId, decoration: const InputDecoration(labelText: 'إلى مستودع'),
               items: _warehouses.where((w) => w.id != _warehouseId).map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
               onChanged: (v) => setState(() => _destinationWarehouseId = v),
               validator: (v) => v == null ? 'يرجى اختيار مستودع الوجهة' : null,

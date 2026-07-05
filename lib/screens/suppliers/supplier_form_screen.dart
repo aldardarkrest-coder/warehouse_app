@@ -54,8 +54,11 @@ class _SupplierFormScreenState extends State<SupplierFormScreen> {
         phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
         address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
       );
-      if (widget.supplier != null) await service.update(widget.supplier!.id!, s);
-      else await service.create(s);
+      if (widget.supplier != null) {
+        await service.update(widget.supplier!.id!, s);
+      } else {
+        await service.create(s);
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); }
     finally { if (mounted) setState(() => _isLoading = false); }

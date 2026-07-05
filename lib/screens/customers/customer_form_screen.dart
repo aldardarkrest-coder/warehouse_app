@@ -54,8 +54,11 @@ class _CustomerFormScreenState extends State<CustomerFormScreen> {
         phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
         address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
       );
-      if (widget.customer != null) await service.update(widget.customer!.id!, c);
-      else await service.create(c);
+      if (widget.customer != null) {
+        await service.update(widget.customer!.id!, c);
+      } else {
+        await service.create(c);
+      }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); }
     finally { if (mounted) setState(() => _isLoading = false); }
