@@ -61,14 +61,6 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
 
   bool get _isTransfer => _type == 'transfer';
 
-  Color get _typeColor => _type == 'in'
-      ? const Color(0xFF48BB78)
-      : _type == 'out' ? const Color(0xFFE53E3E) : const Color(0xFFED8936);
-
-  IconData get _typeIcon => _type == 'in'
-      ? Icons.add_rounded
-      : _type == 'out' ? Icons.remove_rounded : Icons.swap_horiz_rounded;
-
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_itemId == null || _warehouseId == null) {

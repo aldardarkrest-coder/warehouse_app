@@ -58,15 +58,15 @@ class _MainShellState extends State<MainShell> {
       _profile?.role.value == 'admin' || _profile?.role.value == 'warehouse_manager';
 
   List<_NavItem> get _navItems => [
-    _NavItem(icon: Icons.dashboard_rounded, selectedIcon: Icons.dashboard, label: 'لوحة التحكم'),
-    _NavItem(icon: Icons.inventory_2_outlined, selectedIcon: Icons.inventory_2, label: 'الأصناف'),
-    _NavItem(icon: Icons.category_outlined, selectedIcon: Icons.category, label: 'التصنيفات'),
-    _NavItem(icon: Icons.warehouse_outlined, selectedIcon: Icons.warehouse, label: 'المستودعات'),
-    _NavItem(icon: Icons.local_shipping_outlined, selectedIcon: Icons.local_shipping, label: 'الموردين'),
-    _NavItem(icon: Icons.people_outline, selectedIcon: Icons.people, label: 'العملاء'),
-    _NavItem(icon: Icons.swap_horiz_rounded, selectedIcon: Icons.swap_horiz, label: 'الحركات'),
+    const _NavItem(icon: Icons.dashboard_rounded, selectedIcon: Icons.dashboard, label: 'لوحة التحكم'),
+    const _NavItem(icon: Icons.inventory_2_outlined, selectedIcon: Icons.inventory_2, label: 'الأصناف'),
+    const _NavItem(icon: Icons.category_outlined, selectedIcon: Icons.category, label: 'التصنيفات'),
+    const _NavItem(icon: Icons.warehouse_outlined, selectedIcon: Icons.warehouse, label: 'المستودعات'),
+    const _NavItem(icon: Icons.local_shipping_outlined, selectedIcon: Icons.local_shipping, label: 'الموردين'),
+    const _NavItem(icon: Icons.people_outline, selectedIcon: Icons.people, label: 'العملاء'),
+    const _NavItem(icon: Icons.swap_horiz_rounded, selectedIcon: Icons.swap_horiz, label: 'الحركات'),
     if (_isAdmin)
-      _NavItem(icon: Icons.admin_panel_settings_outlined, selectedIcon: Icons.admin_panel_settings, label: 'المستخدمين'),
+      const _NavItem(icon: Icons.admin_panel_settings_outlined, selectedIcon: Icons.admin_panel_settings, label: 'المستخدمين'),
   ];
 
   List<Widget> get _screens => [
