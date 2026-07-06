@@ -22,10 +22,7 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
@@ -41,47 +38,95 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) return const LoadingWidget();
     if (_error != null) return AppErrorWidget(message: _error!, onRetry: _load);
-
     return RefreshIndicator(
       onRefresh: _load,
+      color: const Color(0xFF2D3142),
       child: _warehouses!.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.warehouse_outlined, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  const SizedBox(height: 16),
-                  const Text('لا توجد مستودعات'),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: () => _navigateToForm(),
-                    icon: const Icon(Icons.add),
-                    label: const Text('إضافة مستودع'),
-                  ),
-                ],
-              ),
-            )
+          ? _emptyState()
           : ListView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
               itemCount: _warehouses!.length,
               itemBuilder: (_, i) {
                 final w = _warehouses![i];
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(child: Icon(w.isActive ? Icons.warehouse : Icons.block, color: w.isActive ? null : Colors.red)),
-                    title: Text(w.name),
-                    subtitle: Text(w.location ?? w.description ?? ''),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _navigateToForm(warehouse: w)),
-                        IconButton(icon: const Icon(Icons.delete_outlined, color: Colors.red), onPressed: () => _delete(w)),
-                      ],
-                    ),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: w.isActive ? const Color(0xFFE8ECF1) : const Color(0xFFE53E3E).withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF48BB78).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.warehouse_rounded, color: Color(0xFF48BB78), size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(w.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            if (w.location != null) ...[
+                              const SizedBox(height: 2),
+                              Text(w.location!, maxLines: 1, overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _iconBtn(Icons.edit_outlined, const Color(0xFF718096), () => _navigateToForm(warehouse: w)),
+                          const SizedBox(width: 4),
+                          _iconBtn(Icons.delete_outline_rounded, const Color(0xFFE53E3E), () => _delete(w)),
+                        ],
+                      ),
+                    ],
                   ),
                 );
               },
             ),
+    );
+  }
+
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.warehouse_outlined, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text('لا توجد مستودعات', style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () => _navigateToForm(),
+            icon: const Icon(Icons.add),
+            label: const Text('إضافة مستودع'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
     );
   }
 

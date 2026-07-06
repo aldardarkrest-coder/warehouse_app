@@ -24,8 +24,72 @@ class WarehouseApp extends StatelessWidget {
       title: 'نظام إدارة المخزون',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorSchemeSeed: Colors.indigo,
+        colorSchemeSeed: const Color(0xFF2D3142),
+        brightness: Brightness.light,
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF5F6FA),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          color: Colors.white,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        ),
+        appBarTheme: const AppBarTheme(
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          centerTitle: true,
+          backgroundColor: Color(0xFF2D3142),
+          foregroundColor: Colors.white,
+          titleTextStyle: TextStyle(
+            fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white,
+            fontFamily: 'Roboto',
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF2D3142), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            backgroundColor: const Color(0xFF2D3142),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          ),
+        ),
+        navigationRailTheme: NavigationRailThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: const Color(0xFF2D3142).withValues(alpha: 0.1),
+          selectedIconTheme: const IconThemeData(color: Color(0xFF2D3142)),
+          unselectedIconTheme: const IconThemeData(color: Color(0xFF9098B1)),
+          selectedLabelTextStyle: const TextStyle(
+            color: Color(0xFF2D3142), fontWeight: FontWeight.w600, fontSize: 12,
+          ),
+          unselectedLabelTextStyle: const TextStyle(
+            color: Color(0xFF9098B1), fontSize: 12,
+          ),
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: const Color(0xFF2D3142).withValues(alpha: 0.1),
+        ),
+        drawerTheme: const DrawerThemeData(
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
       home: const AuthGate(),
     );

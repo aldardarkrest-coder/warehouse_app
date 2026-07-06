@@ -21,7 +21,8 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   bool _isLoading = true;
   String? _error;
 
-  @override void initState() { super.initState(); _load(); }
+  @override
+  void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
@@ -35,40 +36,112 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
     if (_error != null) return AppErrorWidget(message: _error!, onRetry: _load);
     return RefreshIndicator(
       onRefresh: _load,
+      color: const Color(0xFF2D3142),
       child: _customers!.isEmpty
-          ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.people_outlined, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
-              const SizedBox(height: 16), const Text('لا توجد عملاء'),
-              const SizedBox(height: 16),
-              FilledButton.icon(onPressed: () => _navigateToForm(), icon: const Icon(Icons.add), label: const Text('إضافة عميل')),
-          ]))
-          : ListView.builder(padding: const EdgeInsets.all(8), itemCount: _customers!.length, itemBuilder: (_, i) {
-              final c = _customers![i];
-              return Card(child: ListTile(
-                leading: CircleAvatar(child: Text(c.name.isNotEmpty ? c.name[0].toUpperCase() : '?')),
-                title: Text(c.name), subtitle: Text(c.phone ?? c.email ?? ''),
-                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                  IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _navigateToForm(customer: c)),
-                  IconButton(icon: const Icon(Icons.delete_outlined, color: Colors.red), onPressed: () => _delete(c)),
-                ]),
-              ));
-          }),
+          ? _emptyState()
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _customers!.length,
+              itemBuilder: (_, i) {
+                final c = _customers![i];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE8ECF1)),
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: const Color(0xFF2D3142).withValues(alpha: 0.1),
+                        radius: 21,
+                        child: Text(
+                          c.name.isNotEmpty ? c.name[0].toUpperCase() : '?',
+                          style: const TextStyle(color: Color(0xFF2D3142), fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            if (c.phone != null || c.email != null) ...[
+                              const SizedBox(height: 2),
+                              Text(c.phone ?? c.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                            ],
+                          ],
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _iconBtn(Icons.edit_outlined, const Color(0xFF718096), () => _navigateToForm(customer: c)),
+                          const SizedBox(width: 4),
+                          _iconBtn(Icons.delete_outline_rounded, const Color(0xFFE53E3E), () => _delete(c)),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.people_outlined, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text('لا توجد عملاء', style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
+          const SizedBox(height: 16),
+          FilledButton.icon(onPressed: () => _navigateToForm(), icon: const Icon(Icons.add), label: const Text('إضافة عميل')),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
     );
   }
 
   Future<void> _navigateToForm({Customer? customer}) async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => CustomerFormScreen(authService: widget.authService, customer: customer)));
+      MaterialPageRoute(builder: (_) => CustomerFormScreen(authService: widget.authService, customer: customer)),
+    );
     if (result == true) _load();
   }
 
   Future<void> _delete(Customer c) async {
-    final confirm = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('تأكيد الحذف'), content: Text('هل أنت متأكد من حذف "${c.name}"؟'),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
-        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف'))],
-    ));
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الحذف'),
+        content: Text('هل أنت متأكد من حذف "${c.name}"؟'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف')),
+        ],
+      ),
+    );
     if (confirm != true) return;
-    try { await _service.delete(c.id!); _load(); } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); }
+    try { await _service.delete(c.id!); _load(); }
+    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); }
   }
 }

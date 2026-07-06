@@ -50,94 +50,136 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F6FA),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'نظام إدارة المخزون',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'تسجيل الدخول إلى النظام',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'البريد الإلكتروني',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'البريد الإلكتروني مطلوب';
-                      if (!v.contains('@')) return 'البريد الإلكتروني غير صالح';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'كلمة المرور',
-                      prefixIcon: const Icon(Icons.lock_outlined),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Logo
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2D3142),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2D3142).withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
-                      if (v.length < 6) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-                      return null;
-                    },
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      onPressed: _isLoading ? null : _login,
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 24, height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('تسجيل الدخول'),
-                    ),
+                  child: const Icon(Icons.inventory_2_rounded, size: 40, color: Colors.white),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'نظام إدارة المخزون',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF2D3142),
                   ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => RegisterScreen(authService: widget.authService),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'تسجيل الدخول إلى النظام',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF9098B1),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // Form Card
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'مرحباً بعودتك',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF2D3142),
+                          ),
                         ),
-                      );
-                    },
-                    child: const Text('ليس لديك حساب؟ إنشاء حساب جديد'),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: const InputDecoration(
+                            labelText: 'البريد الإلكتروني',
+                            prefixIcon: Icon(Icons.email_outlined),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'البريد الإلكتروني مطلوب';
+                            if (!v.contains('@')) return 'البريد الإلكتروني غير صالح';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            labelText: 'كلمة المرور',
+                            prefixIcon: const Icon(Icons.lock_outlined),
+                            suffixIcon: IconButton(
+                              icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            ),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'كلمة المرور مطلوبة';
+                            if (v.length < 6) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: FilledButton(
+                            onPressed: _isLoading ? null : _login,
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 24, height: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Text('تسجيل الدخول', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => RegisterScreen(authService: widget.authService),
+                      ),
+                    );
+                  },
+                  child: const Text('ليس لديك حساب؟ إنشاء حساب جديد'),
+                ),
+              ],
             ),
           ),
         ),

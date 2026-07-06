@@ -23,10 +23,7 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
@@ -42,64 +39,128 @@ class _ItemsListScreenState extends State<ItemsListScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) return const LoadingWidget();
     if (_error != null) return AppErrorWidget(message: _error!, onRetry: _load);
-
     return RefreshIndicator(
       onRefresh: _load,
+      color: const Color(0xFF2D3142),
       child: _items!.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.inventory_outlined, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                  const SizedBox(height: 16),
-                  const Text('لا توجد أصناف'),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: () => _navigateToForm(),
-                    icon: const Icon(Icons.add), label: const Text('إضافة صنف'),
-                  ),
-                ],
-              ),
-            )
+          ? _emptyState()
           : ListView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(12),
               itemCount: _items!.length,
               itemBuilder: (_, i) {
                 final item = _items![i];
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: item.isActive
-                          ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context).colorScheme.errorContainer,
-                      child: Text(item.sku.length > 3 ? item.sku.substring(0, 3).toUpperCase() : item.sku),
-                    ),
-                    title: Text(item.name),
-                    subtitle: Text('${item.sku}${item.categoryName != null ? ' - ${item.categoryName}' : ''}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(icon: const Icon(Icons.visibility_outlined), onPressed: () => _navigateToDetail(item)),
-                        IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _navigateToForm(item: item)),
-                      ],
-                    ),
-                  ),
+                return _ItemCard(
+                  item: item,
+                  onView: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => ItemDetailScreen(authService: widget.authService, item: item),
+                  )),
+                  onEdit: () async {
+                    final r = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: (_) => ItemFormScreen(authService: widget.authService, item: item)),
+                    );
+                    if (r == true) _load();
+                  },
                 );
               },
             ),
     );
   }
 
-  void _navigateToDetail(Item item) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ItemDetailScreen(authService: widget.authService, item: item)),
+  Widget _emptyState() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text('لا توجد أصناف', style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () async {
+              final r = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (_) => ItemFormScreen(authService: widget.authService)),
+              );
+              if (r == true) _load();
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('إضافة صنف'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ItemCard extends StatelessWidget {
+  final Item item;
+  final VoidCallback onView;
+  final VoidCallback onEdit;
+
+  const _ItemCard({required this.item, required this.onView, required this.onEdit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: item.isActive ? const Color(0xFFE8ECF1) : const Color(0xFFE53E3E).withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFF4299E1).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              item.sku.length > 2 ? item.sku.substring(0, 2).toUpperCase() : item.sku,
+              style: const TextStyle(color: Color(0xFF4299E1), fontWeight: FontWeight.bold, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 2),
+                Text(
+                  '${item.sku}${item.categoryName != null ? ' · ${item.categoryName}' : ''}',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _iconBtn(Icons.visibility_outlined, const Color(0xFF4299E1), onView),
+              const SizedBox(width: 4),
+              _iconBtn(Icons.edit_outlined, const Color(0xFF718096), onEdit),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Future<void> _navigateToForm({Item? item}) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => ItemFormScreen(authService: widget.authService, item: item)),
+  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: color, size: 18),
+      ),
     );
-    if (result == true) _load();
   }
 }

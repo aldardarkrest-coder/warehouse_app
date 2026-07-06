@@ -61,6 +61,14 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
 
   bool get _isTransfer => _type == 'transfer';
 
+  Color get _typeColor => _type == 'in'
+      ? const Color(0xFF48BB78)
+      : _type == 'out' ? const Color(0xFFE53E3E) : const Color(0xFFED8936);
+
+  IconData get _typeIcon => _type == 'in'
+      ? Icons.add_rounded
+      : _type == 'out' ? Icons.remove_rounded : Icons.swap_horiz_rounded;
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_itemId == null || _warehouseId == null) {
@@ -110,66 +118,152 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_type == 'in' ? 'حركة إدخال' : _type == 'out' ? 'حركة إخراج' : 'حركة تحويل')),
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: AppBar(
+        title: Text(_type == 'in' ? 'حركة إدخال' : _type == 'out' ? 'حركة إخراج' : 'حركة تحويل'),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(key: _formKey, child: Column(children: [
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'in', label: Text('إدخال'), icon: Icon(Icons.add_circle)),
-              ButtonSegment(value: 'out', label: Text('إخراج'), icon: Icon(Icons.remove_circle)),
-              ButtonSegment(value: 'transfer', label: Text('تحويل'), icon: Icon(Icons.swap_horiz)),
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Type selector
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE8ECF1)),
+                ),
+                child: Row(
+                  children: [
+                    _typeBtn('in', 'إدخال', Icons.add_rounded, const Color(0xFF48BB78)),
+                    _typeBtn('out', 'إخراج', Icons.remove_rounded, const Color(0xFFE53E3E)),
+                    _typeBtn('transfer', 'تحويل', Icons.swap_horiz_rounded, const Color(0xFFED8936)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Form Card
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('بيانات الحركة', style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700, color: const Color(0xFF2D3142),
+                    )),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: _itemId,
+                      decoration: const InputDecoration(labelText: 'الصنف'),
+                      items: _items.map((i) => DropdownMenuItem(value: i.id, child: Text('${i.name} (${i.sku})'))).toList(),
+                      onChanged: (v) => setState(() => _itemId = v),
+                      validator: (v) => v == null ? 'يرجى اختيار صنف' : null,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: _warehouseId,
+                      decoration: InputDecoration(labelText: _isTransfer ? 'من مستودع' : 'المستودع'),
+                      items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                      onChanged: (v) => setState(() => _warehouseId = v),
+                      validator: (v) => v == null ? 'يرجى اختيار مستودع' : null,
+                    ),
+                    if (_isTransfer) ...[
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: _destinationWarehouseId,
+                        decoration: const InputDecoration(labelText: 'إلى مستودع'),
+                        items: _warehouses.where((w) => w.id != _warehouseId).map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                        onChanged: (v) => setState(() => _destinationWarehouseId = v),
+                        validator: (v) => v == null ? 'يرجى اختيار مستودع الوجهة' : null,
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _quantityController,
+                      decoration: const InputDecoration(labelText: 'الكمية'),
+                      keyboardType: TextInputType.number,
+                      validator: (v) {
+                        if (v == null || v.isEmpty) return 'الكمية مطلوبة';
+                        if (double.tryParse(v) == null || double.parse(v) <= 0) return 'الكمية يجب أن تكون أكبر من 0';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _refTypeController,
+                      decoration: const InputDecoration(
+                        labelText: 'نوع المرجع (اختياري)',
+                        hintText: 'مثل: أمر شراء، أمر بيع',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _refIdController,
+                      decoration: const InputDecoration(labelText: 'رقم المرجع (اختياري)'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _notesController,
+                      decoration: const InputDecoration(labelText: 'ملاحظات (اختياري)'),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: FilledButton(
+                  onPressed: _isLoading ? null : _save,
+                  child: _isLoading
+                      ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text('تسجيل الحركة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                ),
+              ),
             ],
-            selected: {_type},
-            onSelectionChanged: (v) => setState(() => _type = v.first),
           ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: _itemId, decoration: const InputDecoration(labelText: 'الصنف'),
-            items: _items.map((i) => DropdownMenuItem(value: i.id, child: Text('${i.name} (${i.sku})'))).toList(),
-            onChanged: (v) => setState(() => _itemId = v),
-            validator: (v) => v == null ? 'يرجى اختيار صنف' : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _typeBtn(String value, String label, IconData icon, Color color) {
+    final selected = _type == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _type = value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: selected ? color.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: selected ? Border.all(color: color.withValues(alpha: 0.3)) : null,
           ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            initialValue: _warehouseId, decoration: InputDecoration(labelText: _isTransfer ? 'من مستودع' : 'المستودع'),
-            items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
-            onChanged: (v) => setState(() => _warehouseId = v),
-            validator: (v) => v == null ? 'يرجى اختيار مستودع' : null,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: selected ? color : Colors.grey, size: 18),
+              const SizedBox(width: 6),
+              Text(label, style: TextStyle(
+                color: selected ? color : Colors.grey,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 13,
+              )),
+            ],
           ),
-          if (_isTransfer) ...[
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _destinationWarehouseId, decoration: const InputDecoration(labelText: 'إلى مستودع'),
-              items: _warehouses.where((w) => w.id != _warehouseId).map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
-              onChanged: (v) => setState(() => _destinationWarehouseId = v),
-              validator: (v) => v == null ? 'يرجى اختيار مستودع الوجهة' : null,
-            ),
-          ],
-          const SizedBox(height: 16),
-          TextFormField(controller: _quantityController, decoration: const InputDecoration(labelText: 'الكمية'),
-            keyboardType: TextInputType.number,
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'الكمية مطلوبة';
-              if (double.tryParse(v) == null || double.parse(v) <= 0) return 'الكمية يجب أن تكون أكبر من 0';
-              return null;
-            }),
-          const SizedBox(height: 16),
-          TextFormField(controller: _refTypeController, decoration: const InputDecoration(
-            labelText: 'نوع المرجع (اختياري)',
-            hintText: 'مثل: أمر شراء، أمر بيع',
-          )),
-          const SizedBox(height: 16),
-          TextFormField(controller: _refIdController, decoration: const InputDecoration(labelText: 'رقم المرجع (اختياري)')),
-          const SizedBox(height: 16),
-          TextFormField(controller: _notesController, decoration: const InputDecoration(labelText: 'ملاحظات (اختياري)'), maxLines: 2),
-          const SizedBox(height: 24),
-          SizedBox(width: double.infinity, height: 48,
-            child: FilledButton(onPressed: _isLoading ? null : _save,
-              child: _isLoading
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('تسجيل الحركة'))),
-        ])),
+        ),
       ),
     );
   }

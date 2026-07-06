@@ -35,39 +35,81 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
     if (_error != null) return AppErrorWidget(message: _error!, onRetry: _load);
     return RefreshIndicator(
       onRefresh: _load,
+      color: const Color(0xFF2D3142),
       child: _movements!.isEmpty
           ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Icon(Icons.swap_horiz, size: 64, color: Theme.of(context).colorScheme.onSurfaceVariant),
-              const SizedBox(height: 16), const Text('لا توجد حركات مخزون'),
+              Icon(Icons.swap_horiz_rounded, size: 64, color: Colors.grey.shade300),
+              const SizedBox(height: 16),
+              Text('لا توجد حركات مخزون', style: TextStyle(color: Colors.grey.shade500)),
           ]))
-          : ListView.builder(padding: const EdgeInsets.all(8), itemCount: _movements!.length, itemBuilder: (_, i) {
-              final m = _movements![i];
-              return Card(child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: (m.type == MovementType.in_
-                      ? Colors.green
-                      : m.type == MovementType.out ? Colors.red : Colors.orange).withValues(alpha: 0.2),
-                  child: Icon(
-                    m.type == MovementType.in_ ? Icons.add_circle
-                        : m.type == MovementType.out ? Icons.remove_circle : Icons.swap_horiz,
-                    color: m.type == MovementType.in_ ? Colors.green
-                        : m.type == MovementType.out ? Colors.red : Colors.orange,
+          : ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: _movements!.length,
+              itemBuilder: (_, i) {
+                final m = _movements![i];
+                final isIn = m.type == MovementType.in_;
+                final isOut = m.type == MovementType.out;
+                final color = isIn ? const Color(0xFF48BB78) : isOut ? const Color(0xFFE53E3E) : const Color(0xFFED8936);
+                final icon = isIn ? Icons.add_rounded : isOut ? Icons.remove_rounded : Icons.swap_horiz_rounded;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE8ECF1)),
                   ),
-                ),
-                title: Text(m.itemName ?? 'غير معروف'),
-                subtitle: Text('${m.type.displayName} | ${m.warehouseName ?? ""} | ${m.createdByName ?? ""}'),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('${m.quantity}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    if (m.createdAt != null)
-                      Text('${m.createdAt!.day}/${m.createdAt!.month}/${m.createdAt!.year}',
-                          style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ));
-          }),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, color: color, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(m.itemName ?? 'غير معروف',
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${m.type.displayName} · ${m.warehouseName ?? ""}',
+                              style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                            ),
+                            if (m.createdByName != null && m.createdByName!.isNotEmpty)
+                              Text(
+                                'بواسطة: ${m.createdByName}',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                              ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${m.quantity}',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: color),
+                          ),
+                          if (m.createdAt != null)
+                            Text(
+                              '${m.createdAt!.day}/${m.createdAt!.month}/${m.createdAt!.year}',
+                              style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
     );
   }
 }
