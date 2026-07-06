@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/sync_service.dart';
+import '../../services/local_storage_service.dart';
 import '../../models/profile.dart';
 import '../auth/login_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../categories/categories_list_screen.dart';
+import '../categories/category_form_screen.dart';
 import '../items/items_list_screen.dart';
 import '../items/item_form_screen.dart';
 import '../warehouses/warehouses_list_screen.dart';
+import '../warehouses/warehouse_form_screen.dart';
 import '../suppliers/suppliers_list_screen.dart';
+import '../suppliers/supplier_form_screen.dart';
 import '../customers/customers_list_screen.dart';
+import '../customers/customer_form_screen.dart';
 import '../inventory/movements_list_screen.dart';
 import '../inventory/movement_form_screen.dart';
 import '../users/users_management_screen.dart';
@@ -26,12 +32,20 @@ class _MainShellState extends State<MainShell> {
   Profile? _profile;
   int _selectedIndex = 0;
   bool _isLoading = true;
+  int _pendingSync = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _checkSyncQueue();
+  }
+
+  void _checkSyncQueue() async {
+    _pendingSync = await LocalStorageService.instance.getQueueLength();
+    if (mounted) setState(() {});
+    Future.delayed(const Duration(seconds: 10), _checkSyncQueue);
   }
 
   Future<void> _loadProfile() async {
@@ -100,11 +114,38 @@ class _MainShellState extends State<MainShell> {
                 onPressed: () => _scaffoldKey.currentState?.openDrawer(),
               ),
         actions: [
-          if (_isManagerOrAdmin)
+          if (_pendingSync > 0)
+            Tooltip(
+              message: '$_pendingSync عملية بانتظار المزامنة',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: SizedBox(
+                  width: 36, height: 36,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.orange.shade300,
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Text('$_pendingSync',
+                          style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.orange.shade200)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (_isManagerOrAdmin && _selectedIndex != 0 && _selectedIndex < 7)
             IconButton(
               icon: const Icon(Icons.add_circle_outline_rounded),
-              tooltip: 'إضافة جديدة',
-              onPressed: () => _showQuickActions(context),
+              tooltip: 'إضافة ${_navItems[_selectedIndex].label}',
+              onPressed: _onAddPressed,
             ),
           if (_profile != null)
             PopupMenuButton<String>(
@@ -270,6 +311,21 @@ class _MainShellState extends State<MainShell> {
         ],
       ),
     );
+  }
+
+  void _onAddPressed() {
+    switch (_selectedIndex) {
+      case 1: _push(ItemFormScreen(authService: widget.authService)); break;
+      case 2: _push(CategoryFormScreen(authService: widget.authService)); break;
+      case 3: _push(WarehouseFormScreen(authService: widget.authService)); break;
+      case 4: _push(SupplierFormScreen(authService: widget.authService)); break;
+      case 5: _push(CustomerFormScreen(authService: widget.authService)); break;
+      case 6: _push(MovementFormScreen(authService: widget.authService, initialType: 'in')); break;
+    }
+  }
+
+  void _push(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
   }
 
   void _showQuickActions(BuildContext context) {
