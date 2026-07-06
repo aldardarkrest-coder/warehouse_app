@@ -41,7 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني.'),
+            content: Text('تم إنشاء الحساب بنجاح! سيتم تفعيل حسابك من قبل مدير النظام.'),
             backgroundColor: Colors.green,
           ),
         );

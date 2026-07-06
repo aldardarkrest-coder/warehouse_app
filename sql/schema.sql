@@ -3,7 +3,12 @@
 -- Inventory & Warehouse Management System
 -- ============================================================
 
--- 0. Extensions
+-- 0. قبل تشغيل هذا الملف: اذهب إلى Supabase Dashboard → Authentication → Settings
+--    و عطّل "Confirm email" (إيقاف تأكيد البريد الإلكتروني).
+--    بعد تشغيل الملف، أنشئ حساب مدير أول من التطبيق، ثم نفّذ:
+--    UPDATE public.profiles SET is_active = true, role = 'admin' WHERE email = 'your@email.com';
+
+-- Extensions
 create extension if not exists "uuid-ossp";
 
 -- 1. Custom Types
@@ -152,12 +157,13 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name, role)
+  insert into public.profiles (id, email, full_name, role, is_active)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
-    'employee'
+    'employee',
+    false
   );
   return new;
 end;
