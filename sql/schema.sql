@@ -19,7 +19,7 @@ create extension if not exists "uuid-ossp";
 -- ============================================================
 
 -- 1.1 Profiles (extends auth.users)
-create table public.profiles (
+create table if not exists public.profiles (
   id          uuid primary key references auth.users(id) on delete cascade,
   email       text not null,
   full_name   text not null,
@@ -30,7 +30,7 @@ create table public.profiles (
 );
 
 -- 1.2 Categories
-create table public.categories (
+create table if not exists public.categories (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
   description text,
@@ -41,7 +41,7 @@ create table public.categories (
 );
 
 -- 1.3 Warehouses
-create table public.warehouses (
+create table if not exists public.warehouses (
   id          uuid primary key default uuid_generate_v4(),
   name        text not null,
   location    text,
@@ -52,7 +52,7 @@ create table public.warehouses (
 );
 
 -- 1.4 Items
-create table public.items (
+create table if not exists public.items (
   id              uuid primary key default uuid_generate_v4(),
   name            text not null,
   description     text,
@@ -66,7 +66,7 @@ create table public.items (
 );
 
 -- 1.5 Suppliers
-create table public.suppliers (
+create table if not exists public.suppliers (
   id             uuid primary key default uuid_generate_v4(),
   name           text not null,
   contact_person text,
@@ -79,7 +79,7 @@ create table public.suppliers (
 );
 
 -- 1.6 Customers
-create table public.customers (
+create table if not exists public.customers (
   id             uuid primary key default uuid_generate_v4(),
   name           text not null,
   contact_person text,
@@ -92,7 +92,7 @@ create table public.customers (
 );
 
 -- 1.7 Inventory Items (stock levels per item per warehouse)
-create table public.inventory_items (
+create table if not exists public.inventory_items (
   id           uuid primary key default uuid_generate_v4(),
   item_id      uuid not null references public.items(id) on delete cascade,
   warehouse_id uuid not null references public.warehouses(id) on delete cascade,
@@ -103,7 +103,7 @@ create table public.inventory_items (
 );
 
 -- 1.8 Inventory Movements
-create table public.inventory_movements (
+create table if not exists public.inventory_movements (
   id             uuid primary key default uuid_generate_v4(),
   item_id        uuid not null references public.items(id) on delete restrict,
   warehouse_id   uuid not null references public.warehouses(id) on delete restrict,
@@ -117,7 +117,7 @@ create table public.inventory_movements (
 );
 
 -- 1.9 Audit Log
-create table public.audit_log (
+create table if not exists public.audit_log (
   id          uuid primary key default uuid_generate_v4(),
   user_id     uuid references auth.users(id),
   action      text not null,
@@ -132,18 +132,18 @@ create table public.audit_log (
 -- ============================================================
 -- INDEXES
 -- ============================================================
-create index idx_categories_parent on public.categories(parent_id);
-create index idx_items_category on public.items(category_id);
-create index idx_items_sku on public.items(sku);
-create index idx_inventory_items_item on public.inventory_items(item_id);
-create index idx_inventory_items_warehouse on public.inventory_items(warehouse_id);
-create index idx_movements_item on public.inventory_movements(item_id);
-create index idx_movements_warehouse on public.inventory_movements(warehouse_id);
-create index idx_movements_created on public.inventory_movements(created_at desc);
-create index idx_movements_created_by on public.inventory_movements(created_by);
-create index idx_audit_user on public.audit_log(user_id);
-create index idx_audit_table on public.audit_log(table_name);
-create index idx_audit_created on public.audit_log(created_at desc);
+create index if not exists idx_categories_parent on public.categories(parent_id);
+create index if not exists idx_items_category on public.items(category_id);
+create index if not exists idx_items_sku on public.items(sku);
+create index if not exists idx_inventory_items_item on public.inventory_items(item_id);
+create index if not exists idx_inventory_items_warehouse on public.inventory_items(warehouse_id);
+create index if not exists idx_movements_item on public.inventory_movements(item_id);
+create index if not exists idx_movements_warehouse on public.inventory_movements(warehouse_id);
+create index if not exists idx_movements_created on public.inventory_movements(created_at desc);
+create index if not exists idx_movements_created_by on public.inventory_movements(created_by);
+create index if not exists idx_audit_user on public.audit_log(user_id);
+create index if not exists idx_audit_table on public.audit_log(table_name);
+create index if not exists idx_audit_created on public.audit_log(created_at desc);
 
 -- ============================================================
 -- FUNCTIONS
@@ -305,157 +305,157 @@ alter table public.inventory_movements enable row level security;
 alter table public.audit_log enable row level security;
 
 -- PROFILES
-create policy "Users can view own profile"
+create policy if not exists "Users can view own profile"
   on public.profiles for select
   using (auth.uid() = id);
 
-create policy "Admins can view all profiles"
+create policy if not exists "Admins can view all profiles"
   on public.profiles for select
   using (public.is_admin());
 
-create policy "Admins can update profiles"
+create policy if not exists "Admins can update profiles"
   on public.profiles for update
   using (public.is_admin());
 
 -- CATEGORIES
-create policy "All authenticated users can view categories"
+create policy if not exists "All authenticated users can view categories"
   on public.categories for select
   to authenticated
   using (true);
 
-create policy "Managers and admins can insert categories"
+create policy if not exists "Managers and admins can insert categories"
   on public.categories for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy "Managers and admins can update categories"
+create policy if not exists "Managers and admins can update categories"
   on public.categories for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy "Only admins can delete categories"
+create policy if not exists "Only admins can delete categories"
   on public.categories for delete
   to authenticated
   using (public.is_admin());
 
 -- WAREHOUSES
-create policy "All authenticated users can view warehouses"
+create policy if not exists "All authenticated users can view warehouses"
   on public.warehouses for select
   to authenticated
   using (true);
 
-create policy "Managers and admins can insert warehouses"
+create policy if not exists "Managers and admins can insert warehouses"
   on public.warehouses for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy "Managers and admins can update warehouses"
+create policy if not exists "Managers and admins can update warehouses"
   on public.warehouses for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy "Only admins can delete warehouses"
+create policy if not exists "Only admins can delete warehouses"
   on public.warehouses for delete
   to authenticated
   using (public.is_admin());
 
 -- ITEMS
-create policy "All authenticated users can view items"
+create policy if not exists "All authenticated users can view items"
   on public.items for select
   to authenticated
   using (true);
 
-create policy "Managers and admins can insert items"
+create policy if not exists "Managers and admins can insert items"
   on public.items for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy "Managers and admins can update items"
+create policy if not exists "Managers and admins can update items"
   on public.items for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy "Only admins can delete items"
+create policy if not exists "Only admins can delete items"
   on public.items for delete
   to authenticated
   using (public.is_admin());
 
 -- SUPPLIERS
-create policy "All authenticated users can view suppliers"
+create policy if not exists "All authenticated users can view suppliers"
   on public.suppliers for select
   to authenticated
   using (true);
 
-create policy "Managers and admins can insert suppliers"
+create policy if not exists "Managers and admins can insert suppliers"
   on public.suppliers for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy "Managers and admins can update suppliers"
+create policy if not exists "Managers and admins can update suppliers"
   on public.suppliers for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy "Only admins can delete suppliers"
+create policy if not exists "Only admins can delete suppliers"
   on public.suppliers for delete
   to authenticated
   using (public.is_admin());
 
 -- CUSTOMERS
-create policy "All authenticated users can view customers"
+create policy if not exists "All authenticated users can view customers"
   on public.customers for select
   to authenticated
   using (true);
 
-create policy "Managers and admins can insert customers"
+create policy if not exists "Managers and admins can insert customers"
   on public.customers for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy "Managers and admins can update customers"
+create policy if not exists "Managers and admins can update customers"
   on public.customers for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy "Only admins can delete customers"
+create policy if not exists "Only admins can delete customers"
   on public.customers for delete
   to authenticated
   using (public.is_admin());
 
 -- INVENTORY ITEMS (stock levels)
-create policy "All authenticated users can view inventory"
+create policy if not exists "All authenticated users can view inventory"
   on public.inventory_items for select
   to authenticated
   using (true);
 
-create policy "Only system can modify inventory directly"
+create policy if not exists "Only system can modify inventory directly"
   on public.inventory_items for insert
   to authenticated
   with check (public.is_admin());
 
-create policy "Only system can update inventory directly"
+create policy if not exists "Only system can update inventory directly"
   on public.inventory_items for update
   to authenticated
   using (public.is_admin());
 
 -- INVENTORY MOVEMENTS
-create policy "All authenticated users can view movements"
+create policy if not exists "All authenticated users can view movements"
   on public.inventory_movements for select
   to authenticated
   using (true);
 
-create policy "Authenticated users can create movements"
+create policy if not exists "Authenticated users can create movements"
   on public.inventory_movements for insert
   to authenticated
   with check (auth.uid() = created_by);
 
-create policy "Only admins can update movements"
+create policy if not exists "Only admins can update movements"
   on public.inventory_movements for update
   to authenticated
   using (public.is_admin());
 
 -- AUDIT LOG (read-only for admins)
-create policy "Only admins can view audit log"
+create policy if not exists "Only admins can view audit log"
   on public.audit_log for select
   to authenticated
   using (public.is_admin());
@@ -486,3 +486,4 @@ on conflict do nothing;
 -- للتنصيبات الحالية: شغّل الأسطر التالية لتحديث columns من enum إلى text
 -- ALTER TABLE public.profiles ALTER COLUMN role TYPE text;
 -- ALTER TABLE public.inventory_movements ALTER COLUMN type TYPE text;
+
