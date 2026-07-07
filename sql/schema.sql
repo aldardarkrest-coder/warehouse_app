@@ -12,8 +12,14 @@
 create extension if not exists "uuid-ossp";
 
 -- 1. Custom Types
-create type user_role as enum ('admin', 'warehouse_manager', 'employee');
-create type movement_type as enum ('in', 'out', 'transfer');
+do $$ begin
+  create type user_role as enum ('admin', 'warehouse_manager', 'employee');
+exception when duplicate_object then null;
+end $$;
+do $$ begin
+  create type movement_type as enum ('in', 'out', 'transfer');
+exception when duplicate_object then null;
+end $$;
 
 -- ============================================================
 -- TABLES
