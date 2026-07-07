@@ -218,8 +218,6 @@ returns trigger
 language plpgsql
 security definer
 as $$
-declare
-  current_qty numeric;
 begin
   if new.type = 'in' then
     insert into public.inventory_items (item_id, warehouse_id, quantity)
@@ -227,15 +225,10 @@ begin
     on conflict (item_id, warehouse_id)
     do update set quantity = public.inventory_items.quantity + new.quantity;
   elsif new.type = 'out' then
-    select quantity into current_qty
-    from public.inventory_items
-    where item_id = new.item_id and warehouse_id = new.warehouse_id;
-    if current_qty is null or current_qty < new.quantity then
-      raise exception 'Insufficient stock: available=%, requested=%', coalesce(current_qty, 0), new.quantity;
-    end if;
-    update public.inventory_items
-    set quantity = quantity - new.quantity
-    where item_id = new.item_id and warehouse_id = new.warehouse_id;
+    insert into public.inventory_items (item_id, warehouse_id, quantity)
+    values (new.item_id, new.warehouse_id, -new.quantity)
+    on conflict (item_id, warehouse_id)
+    do update set quantity = public.inventory_items.quantity - new.quantity;
   elsif new.type = 'transfer' then
     -- For transfers, quantity is negative from source
     -- The application should create TWO records: out from source, in to destination

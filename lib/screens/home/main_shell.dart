@@ -16,6 +16,7 @@ import '../customers/customers_list_screen.dart';
 import '../customers/customer_form_screen.dart';
 import '../inventory/movements_list_screen.dart';
 import '../inventory/movement_form_screen.dart';
+import '../reports/reports_screen.dart';
 import '../users/users_management_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -78,6 +79,7 @@ class _MainShellState extends State<MainShell> {
     const _NavItem(icon: Icons.local_shipping_outlined, selectedIcon: Icons.local_shipping, label: 'الموردين'),
     const _NavItem(icon: Icons.people_outline, selectedIcon: Icons.people, label: 'العملاء'),
     const _NavItem(icon: Icons.swap_horiz_rounded, selectedIcon: Icons.swap_horiz, label: 'الحركات'),
+    const _NavItem(icon: Icons.bar_chart_rounded, selectedIcon: Icons.bar_chart_rounded, label: 'التقارير'),
     if (_isAdmin)
       const _NavItem(icon: Icons.admin_panel_settings_outlined, selectedIcon: Icons.admin_panel_settings, label: 'المستخدمين'),
   ];
@@ -90,6 +92,7 @@ class _MainShellState extends State<MainShell> {
     SuppliersListScreen(authService: widget.authService),
     CustomersListScreen(authService: widget.authService),
     MovementsListScreen(authService: widget.authService),
+    ReportsScreen(authService: widget.authService),
     if (_isAdmin) UsersManagementScreen(authService: widget.authService),
   ];
 
@@ -140,7 +143,7 @@ class _MainShellState extends State<MainShell> {
                 ),
               ),
             ),
-          if (_isManagerOrAdmin && _selectedIndex != 0 && _selectedIndex < 7)
+          if (_isManagerOrAdmin && _selectedIndex <= 6)
             IconButton(
               icon: const Icon(Icons.add_circle_outline_rounded),
               tooltip: 'إضافة ${_navItems[_selectedIndex].label}',
@@ -314,6 +317,7 @@ class _MainShellState extends State<MainShell> {
 
   void _onAddPressed() {
     switch (_selectedIndex) {
+      case 0: _showQuickActions(); break;
       case 1: _push(ItemFormScreen(authService: widget.authService)); break;
       case 2: _push(CategoryFormScreen(authService: widget.authService)); break;
       case 3: _push(WarehouseFormScreen(authService: widget.authService)); break;
@@ -325,6 +329,64 @@ class _MainShellState extends State<MainShell> {
 
   void _push(Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  }
+
+  void _showQuickActions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text('إضافة جديدة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: const Color(0xFF48BB78).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF48BB78)),
+              ),
+              title: const Text('حركة إدخال'),
+              subtitle: const Text('إضافة كمية للمخزون'),
+              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => MovementFormScreen(authService: widget.authService, initialType: 'in'))); },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: const Color(0xFFE53E3E).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFFE53E3E)),
+              ),
+              title: const Text('حركة إخراج'),
+              subtitle: const Text('صرف كمية من المخزون'),
+              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => MovementFormScreen(authService: widget.authService, initialType: 'out'))); },
+            ),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: const Color(0xFF2D3142).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.inventory_2_outlined, color: Color(0xFF2D3142)),
+              ),
+              title: const Text('صنف جديد'),
+              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => ItemFormScreen(authService: widget.authService))); },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 }
 
