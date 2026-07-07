@@ -12,14 +12,16 @@
 create extension if not exists "uuid-ossp";
 
 -- 1. Custom Types
-do $$ begin
-  create type user_role as enum ('admin', 'warehouse_manager', 'employee');
-exception when duplicate_object then null;
-end $$;
-do $$ begin
-  create type movement_type as enum ('in', 'out', 'transfer');
-exception when duplicate_object then null;
-end $$;
+do $$
+begin
+  if not exists (select 1 from pg_catalog.pg_type where typname = 'user_role') then
+    create type user_role as enum ('admin', 'warehouse_manager', 'employee');
+  end if;
+  if not exists (select 1 from pg_catalog.pg_type where typname = 'movement_type') then
+    create type movement_type as enum ('in', 'out', 'transfer');
+  end if;
+end;
+$$;
 
 -- ============================================================
 -- TABLES
