@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
-import '../../services/sync_service.dart';
 import '../../services/local_storage_service.dart';
 import '../../models/profile.dart';
 import '../auth/login_screen.dart';
@@ -326,80 +325,6 @@ class _MainShellState extends State<MainShell> {
 
   void _push(Widget screen) {
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
-  }
-
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text('إضافة جديدة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFF48BB78).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF48BB78)),
-              ),
-              title: const Text('حركة إدخال'),
-              subtitle: const Text('إضافة كمية للمخزون'),
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => MovementFormScreen(authService: widget.authService, initialType: 'in'),
-                ));
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFFE53E3E).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFFE53E3E)),
-              ),
-              title: const Text('حركة إخراج'),
-              subtitle: const Text('صرف كمية من المخزون'),
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => MovementFormScreen(authService: widget.authService, initialType: 'out'),
-                ));
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: const Color(0xFF2D3142).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.inventory_2_outlined, color: Color(0xFF2D3142)),
-              ),
-              title: const Text('صنف جديد'),
-              onTap: () {
-                Navigator.pop(ctx);
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => ItemFormScreen(authService: widget.authService),
-                ));
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
   }
 }
 

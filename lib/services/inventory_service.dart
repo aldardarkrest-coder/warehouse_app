@@ -96,7 +96,7 @@ class InventoryService {
       recentMovements = cachedMovements.map((e) => InventoryMovement.fromJson(e)).take(10).toList();
 
       final cachedStock = await LocalStorageService.instance.getCachedList('inventory_items');
-      lowStockCount = cachedStock.where((s) => (s['quantity'] as num?) ?? 0 <= 0).length;
+      lowStockCount = cachedStock.where((s) => ((s['quantity'] as num?) ?? 0) <= 0).length;
     }
 
     return {

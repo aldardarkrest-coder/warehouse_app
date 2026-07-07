@@ -118,7 +118,7 @@ class LocalStorageService {
 
   Future<void> incrementRetry(int id) async {
     final db = await database;
-    await db.update('sync_queue', {'retries': rawIncrement(1)}, where: 'id = ?', whereArgs: [id]);
+    await db.rawUpdate('UPDATE sync_queue SET retries = retries + 1 WHERE id = ?', [id]);
   }
 
   String get errorOffline => 'غير متصل بالإنترنت. تم حفظ العملية محلياً وستتم مزامنتها لاحقاً.';
