@@ -12,16 +12,7 @@
 create extension if not exists "uuid-ossp";
 
 -- 1. Custom Types
-do $$
-begin
-  if not exists (select 1 from pg_catalog.pg_type where typname = 'user_role') then
-    create type user_role as enum ('admin', 'warehouse_manager', 'employee');
-  end if;
-  if not exists (select 1 from pg_catalog.pg_type where typname = 'movement_type') then
-    create type movement_type as enum ('in', 'out', 'transfer');
-  end if;
-end;
-$$;
+-- تم الاستغناء عن الـ enum types واستخدام text with check لتجنب مشكلة duplicate type
 
 -- ============================================================
 -- TABLES
@@ -32,7 +23,7 @@ create table public.profiles (
   id          uuid primary key references auth.users(id) on delete cascade,
   email       text not null,
   full_name   text not null,
-  role        user_role not null default 'employee',
+  role        text not null default 'employee' check (role in ('admin', 'warehouse_manager', 'employee')),
   is_active   boolean not null default true,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
@@ -116,7 +107,7 @@ create table public.inventory_movements (
   id             uuid primary key default uuid_generate_v4(),
   item_id        uuid not null references public.items(id) on delete restrict,
   warehouse_id   uuid not null references public.warehouses(id) on delete restrict,
-  type           movement_type not null,
+  type           text not null check (type in ('in', 'out', 'transfer')),
   quantity       numeric not null check (quantity > 0),
   reference_type text,  -- 'purchase_order', 'sales_order', 'adjustment', 'transfer'
   reference_id   text,
@@ -491,3 +482,7 @@ insert into public.warehouses (name, location, description) values
   ('مستودع المواد الخام', 'المنطقة الصناعية - مبنى ب', 'تخزين المواد الأولية'),
   ('مستودع التوزيع', 'المنطقة التجارية', 'توزيع المنتجات للعملاء')
 on conflict do nothing;
+
+-- للتنصيبات الحالية: شغّل الأسطر التالية لتحديث columns من enum إلى text
+-- ALTER TABLE public.profiles ALTER COLUMN role TYPE text;
+-- ALTER TABLE public.inventory_movements ALTER COLUMN type TYPE text;
