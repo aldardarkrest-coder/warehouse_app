@@ -304,158 +304,169 @@ alter table public.inventory_items enable row level security;
 alter table public.inventory_movements enable row level security;
 alter table public.audit_log enable row level security;
 
+-- حذف جميع السياسات الحالية للسماح بإعادة التشغيل
+do $$
+declare
+  rec record;
+begin
+  for rec in select policyname, tablename from pg_policies where schemaname = 'public' loop
+    execute format('drop policy if exists %I on public.%I', rec.policyname, rec.tablename);
+  end loop;
+end;
+$$;
+
 -- PROFILES
-create policy if not exists "Users can view own profile"
+create policy "Users can view own profile"
   on public.profiles for select
   using (auth.uid() = id);
 
-create policy if not exists "Admins can view all profiles"
+create policy "Admins can view all profiles"
   on public.profiles for select
   using (public.is_admin());
 
-create policy if not exists "Admins can update profiles"
+create policy "Admins can update profiles"
   on public.profiles for update
   using (public.is_admin());
 
 -- CATEGORIES
-create policy if not exists "All authenticated users can view categories"
+create policy "All authenticated users can view categories"
   on public.categories for select
   to authenticated
   using (true);
 
-create policy if not exists "Managers and admins can insert categories"
+create policy "Managers and admins can insert categories"
   on public.categories for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy if not exists "Managers and admins can update categories"
+create policy "Managers and admins can update categories"
   on public.categories for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy if not exists "Only admins can delete categories"
+create policy "Only admins can delete categories"
   on public.categories for delete
   to authenticated
   using (public.is_admin());
 
 -- WAREHOUSES
-create policy if not exists "All authenticated users can view warehouses"
+create policy "All authenticated users can view warehouses"
   on public.warehouses for select
   to authenticated
   using (true);
 
-create policy if not exists "Managers and admins can insert warehouses"
+create policy "Managers and admins can insert warehouses"
   on public.warehouses for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy if not exists "Managers and admins can update warehouses"
+create policy "Managers and admins can update warehouses"
   on public.warehouses for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy if not exists "Only admins can delete warehouses"
+create policy "Only admins can delete warehouses"
   on public.warehouses for delete
   to authenticated
   using (public.is_admin());
 
 -- ITEMS
-create policy if not exists "All authenticated users can view items"
+create policy "All authenticated users can view items"
   on public.items for select
   to authenticated
   using (true);
 
-create policy if not exists "Managers and admins can insert items"
+create policy "Managers and admins can insert items"
   on public.items for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy if not exists "Managers and admins can update items"
+create policy "Managers and admins can update items"
   on public.items for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy if not exists "Only admins can delete items"
+create policy "Only admins can delete items"
   on public.items for delete
   to authenticated
   using (public.is_admin());
 
 -- SUPPLIERS
-create policy if not exists "All authenticated users can view suppliers"
+create policy "All authenticated users can view suppliers"
   on public.suppliers for select
   to authenticated
   using (true);
 
-create policy if not exists "Managers and admins can insert suppliers"
+create policy "Managers and admins can insert suppliers"
   on public.suppliers for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy if not exists "Managers and admins can update suppliers"
+create policy "Managers and admins can update suppliers"
   on public.suppliers for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy if not exists "Only admins can delete suppliers"
+create policy "Only admins can delete suppliers"
   on public.suppliers for delete
   to authenticated
   using (public.is_admin());
 
 -- CUSTOMERS
-create policy if not exists "All authenticated users can view customers"
+create policy "All authenticated users can view customers"
   on public.customers for select
   to authenticated
   using (true);
 
-create policy if not exists "Managers and admins can insert customers"
+create policy "Managers and admins can insert customers"
   on public.customers for insert
   to authenticated
   with check (public.is_manager_or_admin());
 
-create policy if not exists "Managers and admins can update customers"
+create policy "Managers and admins can update customers"
   on public.customers for update
   to authenticated
   using (public.is_manager_or_admin());
 
-create policy if not exists "Only admins can delete customers"
+create policy "Only admins can delete customers"
   on public.customers for delete
   to authenticated
   using (public.is_admin());
 
 -- INVENTORY ITEMS (stock levels)
-create policy if not exists "All authenticated users can view inventory"
+create policy "All authenticated users can view inventory"
   on public.inventory_items for select
   to authenticated
   using (true);
 
-create policy if not exists "Only system can modify inventory directly"
+create policy "Only system can modify inventory directly"
   on public.inventory_items for insert
   to authenticated
   with check (public.is_admin());
 
-create policy if not exists "Only system can update inventory directly"
+create policy "Only system can update inventory directly"
   on public.inventory_items for update
   to authenticated
   using (public.is_admin());
 
 -- INVENTORY MOVEMENTS
-create policy if not exists "All authenticated users can view movements"
+create policy "All authenticated users can view movements"
   on public.inventory_movements for select
   to authenticated
   using (true);
 
-create policy if not exists "Authenticated users can create movements"
+create policy "Authenticated users can create movements"
   on public.inventory_movements for insert
   to authenticated
   with check (auth.uid() = created_by);
 
-create policy if not exists "Only admins can update movements"
+create policy "Only admins can update movements"
   on public.inventory_movements for update
   to authenticated
   using (public.is_admin());
 
 -- AUDIT LOG (read-only for admins)
-create policy if not exists "Only admins can view audit log"
+create policy "Only admins can view audit log"
   on public.audit_log for select
   to authenticated
   using (public.is_admin());
@@ -486,4 +497,5 @@ on conflict do nothing;
 -- للتنصيبات الحالية: شغّل الأسطر التالية لتحديث columns من enum إلى text
 -- ALTER TABLE public.profiles ALTER COLUMN role TYPE text;
 -- ALTER TABLE public.inventory_movements ALTER COLUMN type TYPE text;
+
 
