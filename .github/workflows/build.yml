@@ -40,7 +40,9 @@ jobs:
         run: flutter pub get
 
       - name: إنشاء منصة Android
-        run: flutter create --project-name warehouse_app --platforms=android .
+        run: |
+          flutter create --project-name warehouse_app --platforms=android .
+          rm -f test/widget_test.dart
 
       - name: تحليل الكود
         run: flutter analyze

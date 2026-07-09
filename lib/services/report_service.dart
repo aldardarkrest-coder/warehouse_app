@@ -1,6 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/inventory_movement.dart';
-import 'local_storage_service.dart';
 
 class ReportService {
   final SupabaseClient _client;

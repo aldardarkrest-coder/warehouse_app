@@ -37,12 +37,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _reportService.getMovementSummary(),
         _reportService.getStockByWarehouse(),
       ]);
-      if (mounted) setState(() {
-        _stats = results[0] as Map<String, dynamic>;
-        _movementSummary = results[1] as Map<String, dynamic>;
-        _stockByWarehouse = results[2] as Map<String, dynamic>;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _stats = results[0];
+          _movementSummary = results[1];
+          _stockByWarehouse = results[2];
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
     }
@@ -205,7 +207,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ),
             ),
             Text(
-              '${(w['total_qty'] as double).toStringAsFixed(0)}',
+              (w['total_qty'] as double).toStringAsFixed(0),
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Color(0xFF2D3142)),
             ),
           ],
