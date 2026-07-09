@@ -61,19 +61,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('نظرة عامة', style: const TextStyle(
+          const Text('نظرة عامة', style: TextStyle(
             fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF2D3142),
           )),
           const SizedBox(height: 12),
           _buildStatsRow(),
           const SizedBox(height: 24),
-          const Text('ملخص الحركات', style: const TextStyle(
+          const Text('ملخص الحركات', style: TextStyle(
             fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF2D3142),
           )),
           const SizedBox(height: 12),
           _buildMovementSummary(),
           const SizedBox(height: 24),
-          const Text('المخزون حسب المستودع', style: const TextStyle(
+          const Text('المخزون حسب المستودع', style: TextStyle(
             fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF2D3142),
           )),
           const SizedBox(height: 12),
