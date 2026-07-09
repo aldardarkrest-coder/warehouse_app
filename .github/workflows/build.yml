@@ -1,0 +1,60 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: سحب الكود
+        uses: actions/checkout@v4
+
+      - name: تثبيت Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: إعداد supabase_config.dart من Secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "خطأ: SUPABASE_URL و SUPABASE_ANON_KEY غير مضبوطين في GitHub Secrets"
+            echo "أضفهما في: Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          cat > lib/config/supabase_config.dart << EOF
+          class SupabaseConfig {
+            static const String supabaseUrl = '$SUPABASE_URL';
+            static const String supabaseAnonKey = '$SUPABASE_ANON_KEY';
+          }
+          EOF
+
+      - name: تثبيت الاعتماديات
+        run: flutter pub get
+
+      - name: إنشاء منصة Android
+        run: |
+          GEN_DIR=/tmp/flutter_gen_$$
+          mkdir -p $GEN_DIR && cd $GEN_DIR
+          flutter create --project-name warehouse_app --platforms=android .
+          cp -r android $GITHUB_WORKSPACE/
+          rm -rf $GEN_DIR
+
+      - name: تحليل الكود
+        run: flutter analyze
+
+      - name: بناء APK (Debug)
+        run: flutter build apk --debug
+
+      - name: رفع APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk

@@ -1,3 +1,45 @@
-/*
-!/warehouse_app
-!.gitignore
+# Flutter
+.dart_tool/
+.packages
+build/
+*.iml
+.idea/
+.vscode/
+*.lock
+*.log
+*.swp
+*.swo
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+
+# Web
+build/web/
+
+# macOS
+macos/Pods/
+macos/.symlinks/
+
+# Windows
+windows/runner/Debug/
+windows/runner/Release/
+windows/flutter/ephemeral/
+
+# Linux
+linux/flutter/ephemeral/
+
+# Environment
+.env
+.env.local
+*.env
+
+# Config with secrets
+lib/config/supabase_config.dart
