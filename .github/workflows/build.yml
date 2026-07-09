@@ -1,32 +1,35 @@
-name: Build Flutter APK
+name: Build & Deploy
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: سحب الكود
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: تثبيت Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          channel: stable
 
-      - name: إعداد supabase_config.dart من Secrets
+      - name: إعداد supabase_config.dart
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
             echo "خطأ: SUPABASE_URL و SUPABASE_ANON_KEY غير مضبوطين في GitHub Secrets"
-            echo "أضفهما في: Settings → Secrets and variables → Actions"
             exit 1
           fi
           cat > lib/config/supabase_config.dart << EOF
@@ -39,15 +42,15 @@ jobs:
       - name: تثبيت الاعتماديات
         run: flutter pub get
 
-      - name: إنشاء منصة Android
+      - name: إنشاء المنصات
         run: |
-          flutter create --project-name warehouse_app --platforms=android .
+          flutter create --project-name warehouse_app --platforms=android,web .
           rm -f test/widget_test.dart
 
       - name: تحليل الكود
         run: flutter analyze
 
-      - name: بناء APK (Debug)
+      - name: بناء APK
         run: flutter build apk --debug
 
       - name: رفع APK
@@ -55,3 +58,22 @@ jobs:
         with:
           name: app-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
+
+      - name: بناء Web
+        run: flutter build web --base-href /warehouse_app/
+
+      - name: رفع Web
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: نشر
+        id: deployment
+        uses: actions/deploy-pages@v4
