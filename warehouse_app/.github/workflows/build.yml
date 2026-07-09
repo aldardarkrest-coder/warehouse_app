@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+defaults:
+  run:
+    working-directory: warehouse_app
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,11 +45,7 @@ jobs:
 
       - name: إنشاء منصة Android
         run: |
-          GEN_DIR=/tmp/flutter_gen_$$
-          mkdir -p $GEN_DIR && cd $GEN_DIR
           flutter create --project-name warehouse_app --platforms=android .
-          cp -r android $GITHUB_WORKSPACE/
-          rm -rf $GEN_DIR
 
       - name: تحليل الكود
         run: flutter analyze
@@ -57,4 +57,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: warehouse_app/build/app/outputs/flutter-apk/app-debug.apk
