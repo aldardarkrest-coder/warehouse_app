@@ -4,6 +4,7 @@
 !pubspec.yaml
 !.github/
 !lib/
+!web/
 !sql/
 !specs/
 
