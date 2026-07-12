@@ -180,6 +180,15 @@ class _MainShellState extends State<MainShell> {
         ],
       ),
       drawer: isWide ? null : _buildDrawer(context),
+      floatingActionButton: (_isManagerOrAdmin && _selectedIndex <= 6)
+          ? FloatingActionButton.extended(
+              onPressed: _onAddPressed,
+              backgroundColor: _navItems[_selectedIndex].color,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.add_rounded),
+              label: Text('إضافة ${_navItems[_selectedIndex].label}', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+            )
+          : null,
       body: Row(
         children: [
           if (isWide) _buildSideNav(context),
