@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -9,6 +10,7 @@ class LocalStorageService {
   Database? _db;
 
   Future<Database> get database async {
+    if (kIsWeb) throw UnsupportedError('sqflite not available on web');
     if (_db != null) return _db!;
     _db = await openDatabase(
       join(await getDatabasesPath(), 'warehouse_cache.db'),
@@ -42,6 +44,7 @@ class LocalStorageService {
   }
 
   Future<void> cacheList(String table, List<Map<String, dynamic>> items) async {
+    if (kIsWeb) return;
     final db = await database;
     final batch = db.batch();
     batch.delete('cache', where: 'table_name = ?', whereArgs: [table]);
@@ -60,6 +63,7 @@ class LocalStorageService {
   }
 
   Future<void> cacheItem(String table, Map<String, dynamic> item) async {
+    if (kIsWeb) return;
     final id = item['id'];
     if (id == null) return;
     final db = await database;
@@ -76,11 +80,13 @@ class LocalStorageService {
   }
 
   Future<void> removeCachedItem(String table, String id) async {
+    if (kIsWeb) return;
     final db = await database;
     await db.delete('cache', where: 'table_name = ? AND record_id = ?', whereArgs: [table, id]);
   }
 
   Future<List<Map<String, dynamic>>> getCachedList(String table) async {
+    if (kIsWeb) return [];
     final db = await database;
     final rows = await db.query('cache',
       where: 'table_name = ?', whereArgs: [table],
@@ -90,6 +96,7 @@ class LocalStorageService {
   }
 
   Future<void> queueOperation(String table, String operation, String? recordId, Map<String, dynamic>? data) async {
+    if (kIsWeb) return;
     final db = await database;
     await db.insert('sync_queue', {
       'table_name': table,
@@ -101,22 +108,26 @@ class LocalStorageService {
   }
 
   Future<int> getQueueLength() async {
+    if (kIsWeb) return 0;
     final db = await database;
     final result = await db.rawQuery('SELECT COUNT(*) as count FROM sync_queue');
     return result.first['count'] as int;
   }
 
   Future<List<Map<String, dynamic>>> getPendingOperations() async {
+    if (kIsWeb) return [];
     final db = await database;
     return db.query('sync_queue', orderBy: 'created_at ASC');
   }
 
   Future<void> removeFromQueue(int id) async {
+    if (kIsWeb) return;
     final db = await database;
     await db.delete('sync_queue', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> incrementRetry(int id) async {
+    if (kIsWeb) return;
     final db = await database;
     await db.rawUpdate('UPDATE sync_queue SET retries = retries + 1 WHERE id = ?', [id]);
   }
