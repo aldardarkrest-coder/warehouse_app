@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../widgets/loading_widget.dart';
@@ -7,9 +8,7 @@ import '../../models/inventory_movement.dart';
 
 class DashboardScreen extends StatefulWidget {
   final AuthService authService;
-
   const DashboardScreen({super.key, required this.authService});
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
@@ -21,10 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _loadStats();
-  }
+  void initState() { super.initState(); _loadStats(); }
 
   Future<void> _loadStats() async {
     setState(() { _isLoading = true; _error = null; });
@@ -49,47 +45,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadStats,
-      color: const Color(0xFF2D3142),
+      color: const Color(0xFF1A56DB),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Welcome Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A56DB), Color(0xFF3B82F6)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF1A56DB).withValues(alpha: 0.3),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'لوحة التحكم',
+                  style: GoogleFonts.cairo(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'مرحباً بك في نظام إدارة المخزون',
+                  style: GoogleFonts.cairo(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           // Stats Grid
           Row(
             children: [
               Expanded(child: _StatCard(
                 icon: Icons.inventory_2_rounded, label: 'إجمالي الأصناف',
-                value: '$totalItems', color: const Color(0xFF4299E1), bg: const Color(0xFF4299E1),
+                value: '$totalItems', color: const Color(0xFF1A56DB),
               )),
               const SizedBox(width: 12),
               Expanded(child: _StatCard(
                 icon: Icons.warehouse_rounded, label: 'المستودعات',
-                value: '$totalWarehouses', color: const Color(0xFF48BB78), bg: const Color(0xFF48BB78),
+                value: '$totalWarehouses', color: const Color(0xFF10B981),
               )),
               const SizedBox(width: 12),
               Expanded(child: _StatCard(
                 icon: Icons.warning_amber_rounded, label: 'مخزون منخفض',
                 value: '$lowStockCount',
-                color: lowStockCount > 0 ? const Color(0xFFE53E3E) : const Color(0xFFA0AEC0),
-                bg: lowStockCount > 0 ? const Color(0xFFE53E3E) : const Color(0xFFA0AEC0),
+                color: lowStockCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF9CA3AF),
               )),
             ],
           ),
           const SizedBox(height: 24),
-          // Recent Movements
+          // Recent Movements Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'آخر الحركات',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2D3142),
+                  color: const Color(0xFF1F2937),
                 ),
               ),
               if (recentMovements.isNotEmpty)
                 TextButton(
                   onPressed: () {},
-                  child: const Text('عرض الكل'),
+                  child: Text('عرض الكل', style: GoogleFonts.cairo(color: const Color(0xFF1A56DB), fontWeight: FontWeight.w600)),
                 ),
             ],
           ),
@@ -101,13 +132,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE8ECF1)),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
               ),
               child: Column(
                 children: [
                   Icon(Icons.swap_horiz_rounded, size: 48, color: Colors.grey.shade300),
                   const SizedBox(height: 12),
-                  Text('لا توجد حركات بعد', style: TextStyle(color: Colors.grey.shade500, fontSize: 14)),
+                  Text('لا توجد حركات بعد', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 14)),
                 ],
               ),
             )
@@ -124,11 +155,10 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-  final Color bg;
 
   const _StatCard({
     required this.icon, required this.label,
-    required this.value, required this.color, required this.bg,
+    required this.value, required this.color,
   });
 
   @override
@@ -140,7 +170,7 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: bg.withValues(alpha: 0.08),
+            color: color.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -151,18 +181,18 @@ class _StatCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: bg.withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 24, color: bg),
+            child: Icon(icon, size: 24, color: color),
           ),
           const SizedBox(height: 12),
-          Text(value, style: TextStyle(
+          Text(value, style: GoogleFonts.cairo(
             fontSize: 24, fontWeight: FontWeight.w800, color: color,
           )),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(
-            fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500,
+          Text(label, style: GoogleFonts.cairo(
+            fontSize: 12, color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w500,
           ), textAlign: TextAlign.center),
         ],
       ),
@@ -172,14 +202,13 @@ class _StatCard extends StatelessWidget {
 
 class _MovementCard extends StatelessWidget {
   final InventoryMovement movement;
-
   const _MovementCard({required this.movement});
 
   @override
   Widget build(BuildContext context) {
     final isIn = movement.type == MovementType.in_;
     final isOut = movement.type == MovementType.out;
-    final color = isIn ? const Color(0xFF48BB78) : isOut ? const Color(0xFFE53E3E) : const Color(0xFFED8936);
+    final color = isIn ? const Color(0xFF10B981) : isOut ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
     final icon = isIn ? Icons.add_rounded : isOut ? Icons.remove_rounded : Icons.swap_horiz_rounded;
     final label = isIn ? 'إدخال' : isOut ? 'إخراج' : 'تحويل';
 
@@ -189,13 +218,12 @@ class _MovementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8ECF1)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 42, height: 42,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
@@ -209,12 +237,12 @@ class _MovementCard extends StatelessWidget {
               children: [
                 Text(
                   movement.itemName ?? 'غير معروف',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '$label · ${movement.warehouseName ?? ""}',
-                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12),
                 ),
               ],
             ),
@@ -224,14 +252,14 @@ class _MovementCard extends StatelessWidget {
             children: [
               Text(
                 '${movement.quantity}',
-                style: TextStyle(
+                style: GoogleFonts.cairo(
                   fontWeight: FontWeight.w700, fontSize: 16, color: color,
                 ),
               ),
               if (movement.createdAt != null)
                 Text(
                   '${movement.createdAt!.day}/${movement.createdAt!.month}/${movement.createdAt!.year}',
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 11),
+                  style: GoogleFonts.cairo(color: const Color(0xFFD1D5DB), fontSize: 11),
                 ),
             ],
           ),

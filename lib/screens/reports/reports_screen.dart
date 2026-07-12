@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../services/report_service.dart';
@@ -7,9 +8,7 @@ import '../../widgets/error_widget.dart';
 
 class ReportsScreen extends StatefulWidget {
   final AuthService authService;
-
   const ReportsScreen({super.key, required this.authService});
-
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
@@ -24,10 +23,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _load();
-  }
+  void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
@@ -57,25 +53,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return RefreshIndicator(
       onRefresh: _load,
-      color: const Color(0xFF2D3142),
+      color: const Color(0xFF1A56DB),
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('نظرة عامة', style: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF2D3142),
-          )),
+          Text('نظرة عامة', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
           const SizedBox(height: 12),
           _buildStatsRow(),
           const SizedBox(height: 24),
-          Text('ملخص الحركات', style: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF2D3142),
-          )),
+          Text('ملخص الحركات', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
           const SizedBox(height: 12),
           _buildMovementSummary(),
           const SizedBox(height: 24),
-          Text('المخزون حسب المستودع', style: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF2D3142),
-          )),
+          Text('المخزون حسب المستودع', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
           const SizedBox(height: 12),
           _buildWarehouseStock(),
         ],
@@ -91,25 +81,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Row(
       children: [
-        Expanded(child: _MiniCard(
-          icon: Icons.inventory_2_rounded, label: 'الأصناف',
-          value: '$totalItems', color: const Color(0xFF4299E1),
-        )),
+        Expanded(child: _MiniCard(icon: Icons.inventory_2_rounded, label: 'الأصناف', value: '$totalItems', color: const Color(0xFF1A56DB))),
         const SizedBox(width: 8),
-        Expanded(child: _MiniCard(
-          icon: Icons.warehouse_rounded, label: 'المستودعات',
-          value: '$totalWarehouses', color: const Color(0xFF48BB78),
-        )),
+        Expanded(child: _MiniCard(icon: Icons.warehouse_rounded, label: 'المستودعات', value: '$totalWarehouses', color: const Color(0xFF10B981))),
         const SizedBox(width: 8),
-        Expanded(child: _MiniCard(
-          icon: Icons.warning_amber_rounded, label: 'مخزون منخفض',
-          value: '$lowStock', color: lowStock > 0 ? const Color(0xFFE53E3E) : const Color(0xFFA0AEC0),
-        )),
+        Expanded(child: _MiniCard(icon: Icons.warning_amber_rounded, label: 'منخفض', value: '$lowStock', color: lowStock > 0 ? const Color(0xFFEF4444) : const Color(0xFF9CA3AF))),
         const SizedBox(width: 8),
-        Expanded(child: _MiniCard(
-          icon: Icons.swap_horiz_rounded, label: 'الحركات',
-          value: '$totalMovements', color: const Color(0xFF805AD5),
-        )),
+        Expanded(child: _MiniCard(icon: Icons.swap_horiz_rounded, label: 'الحركات', value: '$totalMovements', color: const Color(0xFF8B5CF6))),
       ],
     );
   }
@@ -127,15 +105,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white, borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8ECF1)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [
-          _bar('إدخال', totalIn, Colors.green, countIn),
+          _bar('إدخال', totalIn, const Color(0xFF10B981), countIn),
           const SizedBox(height: 10),
-          _bar('إخراج', totalOut, Colors.red, countOut),
+          _bar('إخراج', totalOut, const Color(0xFFEF4444), countOut),
           const SizedBox(height: 10),
-          _bar('تحويل', 0, Colors.orange, countTransfer, showQty: false),
+          _bar('تحويل', 0, const Color(0xFFF59E0B), countTransfer, showQty: false),
         ],
       ),
     );
@@ -144,7 +122,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Widget _bar(String label, double value, Color color, int count, {bool showQty = true}) {
     return Row(
       children: [
-        SizedBox(width: 60, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
+        SizedBox(width: 60, child: Text(label, style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 13))),
         const SizedBox(width: 12),
         Expanded(
           child: ClipRRect(
@@ -160,7 +138,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         const SizedBox(width: 12),
         Text(
           showQty ? '${value.toStringAsFixed(0)} ($count)' : '$count',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12, color: Colors.grey.shade600),
+          style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 12, color: const Color(0xFF6B7280)),
         ),
       ],
     );
@@ -173,9 +151,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE8ECF1)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
-        child: Center(child: Text('لا توجد بيانات', style: TextStyle(color: Colors.grey.shade500))),
+        child: Center(child: Text('لا توجد بيانات', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF)))),
       );
     }
     return Column(
@@ -184,31 +162,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE8ECF1)),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
         child: Row(
           children: [
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF48BB78).withValues(alpha: 0.1),
+                color: const Color(0xFF10B981).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.warehouse_rounded, color: Color(0xFF48BB78), size: 20),
+              child: const Icon(Icons.warehouse_rounded, color: Color(0xFF10B981), size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(w['name'] as String, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                  Text('${w['items']} أصناف', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                  Text(w['name'] as String, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14)),
+                  Text('${w['items']} أصناف', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12)),
                 ],
               ),
             ),
             Text(
               (w['total_qty'] as double).toStringAsFixed(0),
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: Color(0xFF2D3142)),
+              style: GoogleFonts.cairo(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF1A56DB)),
             ),
           ],
         ),
@@ -231,7 +209,7 @@ class _MiniCard extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white, borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE8ECF1)),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Column(
         children: [
@@ -241,8 +219,8 @@ class _MiniCard extends StatelessWidget {
             child: Icon(icon, size: 16, color: color),
           ),
           const SizedBox(height: 6),
-          Text(value, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-          Text(label, style: TextStyle(fontSize: 9, color: Colors.grey.shade500), textAlign: TextAlign.center),
+          Text(value, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+          Text(label, style: GoogleFonts.cairo(fontSize: 9, color: const Color(0xFF9CA3AF)), textAlign: TextAlign.center),
         ],
       ),
     );
