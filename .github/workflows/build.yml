@@ -53,6 +53,20 @@ jobs:
       - name: بناء Web
         run: flutter build web --base-href=/
 
+      - name: إعداد _worker.js لدعم SPA routing
+        run: |
+          cat > build/web/_worker.js << 'EOF'
+          export default {
+            async fetch(request, env) {
+              const response = await env.ASSETS.fetch(request);
+              if (response.status === 404) {
+                return env.ASSETS.fetch(new URL('/index.html', request.url));
+              }
+              return response;
+            }
+          }
+          EOF
+
       - name: نشر إلى Cloudflare Workers
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
