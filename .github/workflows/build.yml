@@ -55,6 +55,7 @@ jobs:
 
       - name: إعداد _worker.js لدعم SPA routing
         run: |
+          touch build/web/.assetsignore
           cat > build/web/_worker.js << 'EOF'
           export default {
             async fetch(request, env) {
