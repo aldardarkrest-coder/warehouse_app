@@ -194,15 +194,16 @@ class _ItemCard extends StatelessWidget {
   }
 
   Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: color, size: 18),
         ),
-        child: Icon(icon, color: color, size: 18),
       ),
     );
   }

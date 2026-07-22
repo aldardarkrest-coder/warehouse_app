@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../services/item_service.dart';
@@ -64,11 +65,11 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_itemId == null || _warehouseId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يرجى اختيار الصنف والمستودع')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى اختيار الصنف والمستودع', style: GoogleFonts.cairo())));
       return;
     }
     if (_isTransfer && _destinationWarehouseId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يرجى اختيار مستودع الوجهة')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('يرجى اختيار مستودع الوجهة', style: GoogleFonts.cairo())));
       return;
     }
     setState(() => _isLoading = true);
@@ -103,14 +104,14 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted)       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo())));
     } finally { if (mounted) setState(() => _isLoading = false); }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFFF0F2F8),
       appBar: AppBar(
         title: Text(_type == 'in' ? 'حركة إدخال' : _type == 'out' ? 'حركة إخراج' : 'حركة تحويل'),
       ),
@@ -127,13 +128,13 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE8ECF1)),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
                 ),
                 child: Row(
                   children: [
-                    _typeBtn('in', 'إدخال', Icons.add_rounded, const Color(0xFF48BB78)),
-                    _typeBtn('out', 'إخراج', Icons.remove_rounded, const Color(0xFFE53E3E)),
-                    _typeBtn('transfer', 'تحويل', Icons.swap_horiz_rounded, const Color(0xFFED8936)),
+                    _typeBtn('in', 'إدخال', Icons.add_rounded, const Color(0xFF10B981)),
+                    _typeBtn('out', 'إخراج', Icons.remove_rounded, const Color(0xFFEF4444)),
+                    _typeBtn('transfer', 'تحويل', Icons.swap_horiz_rounded, const Color(0xFFF59E0B)),
                   ],
                 ),
               ),
@@ -151,8 +152,8 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('بيانات الحركة', style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700, color: const Color(0xFF2D3142),
+                    Text('بيانات الحركة', style: GoogleFonts.cairo(
+                      fontWeight: FontWeight.w700, fontSize: 18, color: const Color(0xFF1F2937),
                     )),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
@@ -221,7 +222,7 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
                   onPressed: _isLoading ? null : _save,
                   child: _isLoading
                       ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('تسجيل الحركة', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                      : Text('تسجيل الحركة', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
@@ -234,26 +235,30 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   Widget _typeBtn(String value, String label, IconData icon, Color color) {
     final selected = _type == value;
     return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _type = value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: selected ? color.withValues(alpha: 0.1) : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: selected ? Border.all(color: color.withValues(alpha: 0.3)) : null,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: selected ? color : Colors.grey, size: 18),
-              const SizedBox(width: 6),
-              Text(label, style: TextStyle(
-                color: selected ? color : Colors.grey,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                fontSize: 13,
-              )),
-            ],
+      child: Material(
+        color: selected ? color.withValues(alpha: 0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => setState(() => _type = value),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: selected ? BoxDecoration(
+              border: Border.all(color: color.withValues(alpha: 0.3)),
+              borderRadius: BorderRadius.circular(10),
+            ) : null,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: selected ? color : Colors.grey, size: 18),
+                const SizedBox(width: 6),
+                Text(label, style: GoogleFonts.cairo(
+                  color: selected ? color : Colors.grey,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 13,
+                )),
+              ],
+            ),
           ),
         ),
       ),

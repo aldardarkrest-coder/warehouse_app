@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../models/profile.dart';
@@ -37,7 +38,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       await client.from('profiles').update({'role': newRole}).match({'id': userId});
       _load();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo())));
     }
   }
 
@@ -61,10 +62,10 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
       itemBuilder: (_, i) {
         final user = _users![i];
         final roleColor = user.role == UserRole.admin
-            ? const Color(0xFF805AD5)
+            ? const Color(0xFF7C3AED)
             : user.role == UserRole.warehouseManager
-                ? const Color(0xFF2D3142)
-                : const Color(0xFF718096);
+                ? const Color(0xFFF59E0B)
+                : const Color(0xFF6B7280);
 
         return Container(
           margin: const EdgeInsets.only(bottom: 8),
@@ -72,7 +73,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: user.isActive ? const Color(0xFFE8ECF1) : const Color(0xFFE53E3E).withValues(alpha: 0.3)),
+            border: Border.all(color: user.isActive ? const Color(0xFFE5E7EB) : const Color(0xFFEF4444).withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -81,7 +82,7 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 radius: 22,
                 child: Text(
                   user.fullName.isNotEmpty ? user.fullName[0].toUpperCase() : '?',
-                  style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 16),
+                  style: GoogleFonts.cairo(color: roleColor, fontWeight: FontWeight.w800, fontSize: 16),
                 ),
               ),
               const SizedBox(width: 12),
@@ -89,9 +90,9 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    Text(user.fullName, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14)),
                     const SizedBox(height: 2),
-                    Text(user.email, style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                    Text(user.email, style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12)),
                   ],
                 ),
               ),
@@ -102,28 +103,29 @@ class _UsersManagementScreenState extends State<UsersManagementScreen> {
                     color: roleColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(user.role.displayName, style: TextStyle(color: roleColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                  child: Text(user.role.displayName, style: GoogleFonts.cairo(color: roleColor, fontSize: 11, fontWeight: FontWeight.w600)),
                 ),
                 onSelected: (role) => _updateRole(user.id, role),
                 itemBuilder: (_) => [
-                  const PopupMenuItem(value: 'admin', child: Text('مدير النظام')),
-                  const PopupMenuItem(value: 'warehouse_manager', child: Text('مدير مستودع')),
-                  const PopupMenuItem(value: 'employee', child: Text('موظف')),
+                  PopupMenuItem(value: 'admin', child: Text('مدير النظام', style: GoogleFonts.cairo())),
+                  PopupMenuItem(value: 'warehouse_manager', child: Text('مدير مستودع', style: GoogleFonts.cairo())),
+                  PopupMenuItem(value: 'employee', child: Text('موظف', style: GoogleFonts.cairo())),
                 ],
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => _toggleActive(user.id, user.isActive),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: user.isActive ? const Color(0xFF48BB78).withValues(alpha: 0.1) : const Color(0xFFE53E3E).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    user.isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                    color: user.isActive ? const Color(0xFF48BB78) : const Color(0xFFE53E3E),
-                    size: 20,
+              Material(
+                color: user.isActive ? const Color(0xFF10B981).withValues(alpha: 0.1) : const Color(0xFFEF4444).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _toggleActive(user.id, user.isActive),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      user.isActive ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                      color: user.isActive ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                      size: 20,
+                    ),
                   ),
                 ),
               ),

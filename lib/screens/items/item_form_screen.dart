@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/item_service.dart';
 import '../../services/category_service.dart';
@@ -80,7 +81,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       }
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo())));
     } finally { if (mounted) setState(() => _isLoading = false); }
   }
 

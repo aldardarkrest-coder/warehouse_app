@@ -115,15 +115,16 @@ class _CategoriesListScreenState extends State<CategoriesListScreen> {
   }
 
   Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: color, size: 18),
         ),
-        child: Icon(icon, color: color, size: 18),
       ),
     );
   }
@@ -154,6 +155,6 @@ class _CategoriesListScreenState extends State<CategoriesListScreen> {
     );
     if (confirm != true) return;
     try { await _service.delete(category.id!); _load(); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); }
+    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo()))); }
   }
 }

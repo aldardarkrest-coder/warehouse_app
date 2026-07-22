@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/warehouse_service.dart';
 import '../../models/warehouse.dart';
@@ -40,7 +41,7 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
     if (_error != null) return AppErrorWidget(message: _error!, onRetry: _load);
     return RefreshIndicator(
       onRefresh: _load,
-      color: const Color(0xFF2D3142),
+      color: const Color(0xFF1A56DB),
       child: _warehouses!.isEmpty
           ? _emptyState()
           : ListView.builder(
@@ -54,7 +55,7 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: w.isActive ? const Color(0xFFE8ECF1) : const Color(0xFFE53E3E).withValues(alpha: 0.3)),
+                    border: Border.all(color: w.isActive ? const Color(0xFFE5E7EB) : const Color(0xFFEF4444).withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -62,21 +63,21 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
                         width: 42,
                         height: 42,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF48BB78).withValues(alpha: 0.1),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.warehouse_rounded, color: Color(0xFF48BB78), size: 20),
+                        child: const Icon(Icons.warehouse_rounded, color: Color(0xFF10B981), size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(w.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            Text(w.name, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14)),
                             if (w.location != null) ...[
                               const SizedBox(height: 2),
                               Text(w.location!, maxLines: 1, overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                                  style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12)),
                             ],
                           ],
                         ),
@@ -84,9 +85,9 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _iconBtn(Icons.edit_outlined, const Color(0xFF718096), () => _navigateToForm(warehouse: w)),
+                          _iconBtn(Icons.edit_outlined, const Color(0xFF1A56DB), () => _navigateToForm(warehouse: w)),
                           const SizedBox(width: 4),
-                          _iconBtn(Icons.delete_outline_rounded, const Color(0xFFE53E3E), () => _delete(w)),
+                          _iconBtn(Icons.delete_outline_rounded, const Color(0xFFEF4444), () => _delete(w)),
                         ],
                       ),
                     ],
@@ -104,12 +105,12 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
         children: [
           Icon(Icons.warehouse_outlined, size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
-          Text('لا توجد مستودعات', style: TextStyle(color: Colors.grey.shade500, fontSize: 16)),
+          Text('لا توجد مستودعات', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 16)),
           const SizedBox(height: 16),
           FilledButton.icon(
             onPressed: () => _navigateToForm(),
             icon: const Icon(Icons.add),
-            label: const Text('إضافة مستودع'),
+            label: Text('إضافة مستودع', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -117,15 +118,16 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
   }
 
   Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: color, size: 18),
         ),
-        child: Icon(icon, color: color, size: 18),
       ),
     );
   }
@@ -141,16 +143,20 @@ class _WarehousesListScreenState extends State<WarehousesListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('تأكيد الحذف'),
-        content: Text('هل أنت متأكد من حذف "${w.name}"؟'),
+        title: Text('تأكيد الحذف', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+        content: Text('هل أنت متأكد من حذف "${w.name}"؟', style: GoogleFonts.cairo()),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('إلغاء', style: GoogleFonts.cairo())),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFEF4444)),
+            child: Text('حذف', style: GoogleFonts.cairo()),
+          ),
         ],
       ),
     );
     if (confirm != true) return;
     try { await _service.delete(w.id!); _load(); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e'))); }
+    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo()))); }
   }
 }

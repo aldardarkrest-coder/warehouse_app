@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import 'login_screen.dart';
 
@@ -40,9 +41,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم إنشاء الحساب بنجاح! سيتم تفعيل حسابك من قبل مدير النظام.'),
-            backgroundColor: Color(0xFF48BB78),
+          SnackBar(
+            content: Text('تم إنشاء الحساب بنجاح! سيتم تفعيل حسابك من قبل مدير النظام.', style: GoogleFonts.cairo()),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
         Navigator.of(context).pushReplacement(
@@ -66,7 +67,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: const Color(0xFFF0F2F8),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -79,11 +80,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2D3142),
+                    color: const Color(0xFF1A56DB),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF2D3142).withValues(alpha: 0.3),
+                        color: const Color(0xFF1A56DB).withValues(alpha: 0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -94,17 +95,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
                 Text(
                   'إنشاء حساب جديد',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF2D3142),
-                  ),
+                  style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.w800, color: const Color(0xFF1F2937)),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'املأ البيانات لإنشاء حسابك',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF9098B1),
-                  ),
+                  style: GoogleFonts.cairo(fontSize: 14, color: const Color(0xFF9CA3AF)),
                 ),
                 const SizedBox(height: 32),
                 Container(
@@ -127,10 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Text(
                           'بيانات الحساب',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF2D3142),
-                          ),
+                          style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937)),
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -200,7 +193,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     width: 24, height: 24,
                                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                   )
-                                : const Text('إنشاء الحساب', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                                : Text('إنشاء الحساب', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],
@@ -210,7 +203,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('لديك حساب بالفعل؟ تسجيل الدخول'),
+                  child: Text('لديك حساب بالفعل؟ تسجيل الدخول', style: GoogleFonts.cairo(color: const Color(0xFF1A56DB), fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
