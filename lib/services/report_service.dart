@@ -71,15 +71,15 @@ class ReportService {
           .order('created_at', ascending: false);
 
       var list = (data as List).cast<Map<String, dynamic>>();
-      if (type != null) list = list.where((m) => m['type'] == type).toList();
-      if (from != null) list = list.where((m) {
+      if (type != null) { list = list.where((m) => m['type'] == type).toList(); }
+      if (from != null) { list = list.where((m) {
         final d = DateTime.tryParse(m['created_at']?.toString() ?? '');
         return d != null && d.isAfter(from);
-      }).toList();
-      if (to != null) list = list.where((m) {
+      }).toList(); }
+      if (to != null) { list = list.where((m) {
         final d = DateTime.tryParse(m['created_at']?.toString() ?? '');
         return d != null && !d.isAfter(to);
-      }).toList();
+      }).toList(); }
 
       return list.skip(offset).take(limit).toList();
     } catch (_) {
