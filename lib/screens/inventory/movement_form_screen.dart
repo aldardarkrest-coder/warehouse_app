@@ -53,11 +53,11 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
         ItemService().getAll(onlyActive: true),
         WarehouseService().getAll(onlyActive: true),
       ]);
-      if (mounted) setState(() {
+      if (mounted) { setState(() {
         _items = results[0] as List<Item>;
         _warehouses = results[1] as List<Warehouse>;
         _dataLoading = false;
-      });
+      }); }
     } catch (_) {
       if (mounted) setState(() { _dataError = 'فشل تحميل البيانات'; _dataLoading = false; });
     }

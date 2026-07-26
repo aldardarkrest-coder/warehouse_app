@@ -61,21 +61,27 @@ class ReportService {
     String? type,
     DateTime? from,
     DateTime? to,
-    int limit = 100,
+    int limit = 200,
     int offset = 0,
   }) async {
     try {
-      var query = _client
+      final data = await _client
           .from('inventory_movements')
           .select('*, items(name), warehouses(name), profiles(full_name)')
-          .order('created_at', ascending: false)
-          .range(offset, offset + limit - 1);
+          .order('created_at', ascending: false);
 
-      if (type != null) query = query.eq('type', type);
-      if (from != null) query = query.gte('created_at', from.toIso8601String());
-      if (to != null) query = query.lte('created_at', to.toIso8601String());
+      var list = (data as List).cast<Map<String, dynamic>>();
+      if (type != null) list = list.where((m) => m['type'] == type).toList();
+      if (from != null) list = list.where((m) {
+        final d = DateTime.tryParse(m['created_at']?.toString() ?? '');
+        return d != null && d.isAfter(from);
+      }).toList();
+      if (to != null) list = list.where((m) {
+        final d = DateTime.tryParse(m['created_at']?.toString() ?? '');
+        return d != null && !d.isAfter(to);
+      }).toList();
 
-      return (await query) as List<Map<String, dynamic>>;
+      return list.skip(offset).take(limit).toList();
     } catch (_) {
       return [];
     }

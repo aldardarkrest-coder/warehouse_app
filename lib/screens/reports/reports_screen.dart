@@ -41,9 +41,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ]);
       if (mounted) {
         setState(() {
-          _stats = results[0];
-          _movementSummary = results[1];
-          _stockByWarehouse = results[2];
+          _stats = results[0] as Map<String, dynamic>?;
+          _movementSummary = results[1] as Map<String, dynamic>?;
+          _stockByWarehouse = results[2] as Map<String, dynamic>?;
           _movements = results[3] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
