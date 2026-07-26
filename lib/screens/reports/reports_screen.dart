@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
@@ -19,8 +20,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
   Map<String, dynamic>? _stats;
   Map<String, dynamic>? _movementSummary;
   Map<String, dynamic>? _stockByWarehouse;
+  List<Map<String, dynamic>> _movements = [];
   bool _isLoading = true;
   String? _error;
+  String _typeFilter = 'all';
+  String _searchQuery = '';
+  int _selectedTab = 0;
 
   @override
   void initState() { super.initState(); _load(); }
@@ -32,17 +37,58 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _inventoryService.getDashboardStats(),
         _reportService.getMovementSummary(),
         _reportService.getStockByWarehouse(),
+        _reportService.getFilteredMovements(limit: 200),
       ]);
       if (mounted) {
         setState(() {
           _stats = results[0];
           _movementSummary = results[1];
           _stockByWarehouse = results[2];
+          _movements = results[3] as List<Map<String, dynamic>>;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredMovements {
+    var list = _movements;
+    if (_typeFilter == 'in') list = list.where((m) => m['type'] == 'in').toList();
+    if (_typeFilter == 'out') list = list.where((m) => m['type'] == 'out').toList();
+    if (_typeFilter == 'transfer') list = list.where((m) => m['type'] == 'transfer').toList();
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      list = list.where((m) =>
+        (m['items'] as Map?)?['name']?.toString().toLowerCase().contains(q) == true ||
+        (m['warehouses'] as Map?)?['name']?.toString().toLowerCase().contains(q) == true ||
+        (m['profiles'] as Map?)?['full_name']?.toString().toLowerCase().contains(q) == true
+      ).toList();
+    }
+    return list;
+  }
+
+  void _exportCsv() {
+    final rows = StringBuffer();
+    rows.writeln('التاريخ,الصنف,نوع الحركة,المستودع,الكمية,بواسطة');
+    for (final m in _filteredMovements) {
+      final date = m['created_at']?.toString().substring(0, 10) ?? '';
+      final item = (m['items'] as Map?)?['name'] as String? ?? '';
+      final type = m['type'] == 'in' ? 'إدخال' : m['type'] == 'out' ? 'إخراج' : 'تحويل';
+      final wh = (m['warehouses'] as Map?)?['name'] as String? ?? '';
+      final qty = (m['quantity'] as num?)?.toStringAsFixed(0) ?? '0';
+      final by = (m['profiles'] as Map?)?['full_name'] as String? ?? '';
+      rows.writeln('$date,$item,$type,$wh,$qty,$by');
+    }
+
+    Clipboard.setData(ClipboardData(text: rows.toString()));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('تم نسخ التقرير إلى الحافظة - يمكنك لصقه في Excel', style: GoogleFonts.cairo()),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+      ));
     }
   }
 
@@ -57,42 +103,244 @@ class _ReportsScreenState extends State<ReportsScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('نظرة عامة', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
-          const SizedBox(height: 12),
-          _buildStatsRow(),
-          const SizedBox(height: 24),
-          Text('ملخص الحركات', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
-          const SizedBox(height: 12),
-          _buildMovementSummary(),
-          const SizedBox(height: 24),
-          Text('المخزون حسب المستودع', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
-          const SizedBox(height: 12),
-          _buildWarehouseStock(),
+          // Summary row
+          _buildSummaryRow(),
+          const SizedBox(height: 20),
+          // Tabs
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(children: [
+              _tabBtn(0, 'الحركات'),
+              _tabBtn(1, 'المخزون بالمستودعات'),
+              _tabBtn(2, 'ملخص'),
+            ]),
+          ),
+          const SizedBox(height: 16),
+          if (_selectedTab == 0) _buildMovementsTab(),
+          if (_selectedTab == 1) _buildWarehouseTab(),
+          if (_selectedTab == 2) _buildSummaryTab(),
         ],
       ),
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _tabBtn(int index, String label) {
+    final selected = _selectedTab == index;
+    return Expanded(
+      child: Material(
+        color: selected ? const Color(0xFF1A56DB).withValues(alpha: 0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => setState(() => _selectedTab = index),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Text(label, textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                color: selected ? const Color(0xFF1A56DB) : const Color(0xFF9CA3AF),
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow() {
     final totalItems = _stats?['total_items'] as int? ?? 0;
     final totalWarehouses = _stats?['total_warehouses'] as int? ?? 0;
     final lowStock = _stats?['low_stock_count'] as int? ?? 0;
     final totalMovements = _movementSummary?['total_movements'] as int? ?? 0;
 
-    return Row(
-      children: [
-        Expanded(child: _MiniCard(icon: Icons.inventory_2_rounded, label: 'الأصناف', value: '$totalItems', color: const Color(0xFF1A56DB))),
-        const SizedBox(width: 8),
-        Expanded(child: _MiniCard(icon: Icons.warehouse_rounded, label: 'المستودعات', value: '$totalWarehouses', color: const Color(0xFF10B981))),
-        const SizedBox(width: 8),
-        Expanded(child: _MiniCard(icon: Icons.warning_amber_rounded, label: 'منخفض', value: '$lowStock', color: lowStock > 0 ? const Color(0xFFEF4444) : const Color(0xFF9CA3AF))),
-        const SizedBox(width: 8),
-        Expanded(child: _MiniCard(icon: Icons.swap_horiz_rounded, label: 'الحركات', value: '$totalMovements', color: const Color(0xFF8B5CF6))),
-      ],
+    return Row(children: [
+      _miniCard(Icons.inventory_2_rounded, '$totalItems', 'الأصناف', const Color(0xFF1A56DB)),
+      const SizedBox(width: 8),
+      _miniCard(Icons.warehouse_rounded, '$totalWarehouses', 'المستودعات', const Color(0xFF10B981)),
+      const SizedBox(width: 8),
+      _miniCard(Icons.warning_amber_rounded, '$lowStock', 'منخفض', lowStock > 0 ? const Color(0xFFEF4444) : const Color(0xFF9CA3AF)),
+      const SizedBox(width: 8),
+      _miniCard(Icons.swap_horiz_rounded, '$totalMovements', 'الحركات', const Color(0xFF8B5CF6)),
+    ]);
+  }
+
+  Widget _miniCard(IconData icon, String value, String label, Color color) {
+    return Expanded(child: Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Column(children: [
+        Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 16, color: color)),
+        const SizedBox(height: 6),
+        Text(value, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+        Text(label, style: GoogleFonts.cairo(fontSize: 9, color: const Color(0xFF9CA3AF)), textAlign: TextAlign.center),
+      ]),
+    ));
+  }
+
+  Widget _buildMovementsTab() {
+    return Column(children: [
+      // Filters
+      Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+        child: Column(children: [
+          Row(children: [
+            Expanded(child: TextField(
+              onChanged: (v) => setState(() => _searchQuery = v),
+              decoration: InputDecoration(
+                hintText: 'بحث في الحركات...',
+                hintStyle: GoogleFonts.cairo(color: const Color(0xFF9CA3AF)),
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                filled: true,
+                fillColor: const Color(0xFFF0F2F8),
+              ),
+            )),
+            const SizedBox(width: 8),
+            Material(
+              color: const Color(0xFF1A56DB).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: _exportCsv,
+                child: const Padding(padding: EdgeInsets.all(10), child: Icon(Icons.file_download_rounded, color: Color(0xFF1A56DB), size: 20)),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          // Type filter chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              _filterChip('all', 'الكل'),
+              const SizedBox(width: 6),
+              _filterChip('in', 'إدخال'),
+              const SizedBox(width: 6),
+              _filterChip('out', 'إخراج'),
+              const SizedBox(width: 6),
+              _filterChip('transfer', 'تحويل'),
+            ]),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      // Table
+      if (_filteredMovements.isEmpty)
+        Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+          child: Center(child: Text('لا توجد حركات مطابقة', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF)))),
+        )
+      else
+        Container(
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+          clipBehavior: Clip.antiAlias,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowHeight: 40,
+              dataRowMinHeight: 36,
+              dataRowMaxHeight: 40,
+              columnSpacing: 16,
+              headingTextStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 11, color: const Color(0xFF6B7280)),
+              dataTextStyle: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF1F2937)),
+              columns: const [
+                DataColumn(label: Text('التاريخ')),
+                DataColumn(label: Text('الصنف')),
+                DataColumn(label: Text('النوع')),
+                DataColumn(label: Text('المستودع')),
+                DataColumn(label: Text('الكمية'), numeric: true),
+                DataColumn(label: Text('بواسطة')),
+              ],
+              rows: _filteredMovements.map((m) {
+                final type = m['type'] as String?;
+                final typeColor = type == 'in' ? const Color(0xFF10B981) : type == 'out' ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
+                final typeLabel = type == 'in' ? 'إدخال' : type == 'out' ? 'إخراج' : 'تحويل';
+                return DataRow(cells: [
+                  DataCell(Text(m['created_at']?.toString().substring(0, 10) ?? '', style: GoogleFonts.cairo(fontSize: 11, color: const Color(0xFF9CA3AF)))),
+                  DataCell(Text((m['items'] as Map?)?['name'] as String? ?? '')),
+                  DataCell(Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(color: typeColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                    child: Text(typeLabel, style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w600, color: typeColor)),
+                  )),
+                  DataCell(Text((m['warehouses'] as Map?)?['name'] as String? ?? '')),
+                  DataCell(Text((m['quantity'] as num?)?.toStringAsFixed(0) ?? '0', style: GoogleFonts.cairo(fontWeight: FontWeight.w700))),
+                  DataCell(Text((m['profiles'] as Map?)?['full_name'] as String? ?? '', style: GoogleFonts.cairo(fontSize: 11, color: const Color(0xFF6B7280)))),
+                ]);
+              }).toList(),
+            ),
+          ),
+        ),
+    ]);
+  }
+
+  Widget _filterChip(String value, String label) {
+    final selected = _typeFilter == value;
+    return Material(
+      color: selected ? const Color(0xFF1A56DB).withValues(alpha: 0.1) : Colors.transparent,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => setState(() => _typeFilter = value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: selected ? const Color(0xFF1A56DB) : const Color(0xFFE5E7EB)),
+          ),
+          child: Text(label, style: GoogleFonts.cairo(fontSize: 11, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? const Color(0xFF1A56DB) : const Color(0xFF9CA3AF))),
+        ),
+      ),
     );
   }
 
-  Widget _buildMovementSummary() {
+  Widget _buildWarehouseTab() {
+    final warehouses = (_stockByWarehouse?['warehouses'] as List?) ?? [];
+    if (warehouses.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+        child: Center(child: Text('لا توجد بيانات', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF)))),
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+      clipBehavior: Clip.antiAlias,
+      child: DataTable(
+        headingRowHeight: 40,
+        dataRowMinHeight: 36,
+        dataRowMaxHeight: 40,
+        columnSpacing: 16,
+        headingTextStyle: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 11, color: const Color(0xFF6B7280)),
+        dataTextStyle: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF1F2937)),
+        columns: const [
+          DataColumn(label: Text('المستودع')),
+          DataColumn(label: Text('عدد الأصناف'), numeric: true),
+          DataColumn(label: Text('إجمالي الكمية'), numeric: true),
+        ],
+        rows: warehouses.map((w) => DataRow(cells: [
+          DataCell(Row(children: [
+            Container(width: 24, height: 24, decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)), child: const Icon(Icons.warehouse_rounded, color: Color(0xFF10B981), size: 14)),
+            const SizedBox(width: 8),
+            Text(w['name'] as String, style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+          ])),
+          DataCell(Text('${w['items']}')),
+          DataCell(Text((w['total_qty'] as double).toStringAsFixed(0), style: GoogleFonts.cairo(fontWeight: FontWeight.w700))),
+        ])).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSummaryTab() {
     final ms = _movementSummary;
     if (ms == null) return const SizedBox();
     final totalIn = ms['total_in'] as double;
@@ -103,126 +351,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        children: [
-          _bar('إدخال', totalIn, const Color(0xFF10B981), countIn),
-          const SizedBox(height: 10),
-          _bar('إخراج', totalOut, const Color(0xFFEF4444), countOut),
-          const SizedBox(height: 10),
-          _bar('تحويل', 0, const Color(0xFFF59E0B), countTransfer, showQty: false),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Column(children: [
+        _summaryRow('إدخال', totalIn, countIn, const Color(0xFF10B981)),
+        const Divider(height: 24),
+        _summaryRow('إخراج', totalOut, countOut, const Color(0xFFEF4444)),
+        const Divider(height: 24),
+        _summaryRow('تحويل', '-', countTransfer, const Color(0xFFF59E0B)),
+      ]),
     );
   }
 
-  Widget _bar(String label, double value, Color color, int count, {bool showQty = true}) {
-    return Row(
-      children: [
-        SizedBox(width: 60, child: Text(label, style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 13))),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: 0.5,
-              backgroundColor: color.withValues(alpha: 0.1),
-              color: color,
-              minHeight: 12,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          showQty ? '${value.toStringAsFixed(0)} ($count)' : '$count',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 12, color: const Color(0xFF6B7280)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWarehouseStock() {
-    final warehouses = (_stockByWarehouse?['warehouses'] as List?) ?? [];
-    if (warehouses.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Center(child: Text('لا توجد بيانات', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF)))),
-      );
-    }
-    return Column(
-      children: warehouses.map((w) => Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.warehouse_rounded, color: Color(0xFF10B981), size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(w['name'] as String, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14)),
-                  Text('${w['items']} أصناف', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12)),
-                ],
-              ),
-            ),
-            Text(
-              (w['total_qty'] as double).toStringAsFixed(0),
-              style: GoogleFonts.cairo(fontWeight: FontWeight.w800, fontSize: 16, color: const Color(0xFF1A56DB)),
-            ),
-          ],
-        ),
-      )).toList(),
-    );
-  }
-}
-
-class _MiniCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _MiniCard({required this.icon, required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, size: 16, color: color),
-          ),
-          const SizedBox(height: 6),
-          Text(value, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-          Text(label, style: GoogleFonts.cairo(fontSize: 9, color: const Color(0xFF9CA3AF)), textAlign: TextAlign.center),
-        ],
-      ),
-    );
+  Widget _summaryRow(String label, dynamic qty, int count, Color color) {
+    return Row(children: [
+      Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Center(child: Text(label.substring(0, 1), style: GoogleFonts.cairo(fontWeight: FontWeight.w800, color: color, fontSize: 16)))),
+      const SizedBox(width: 12),
+      Expanded(child: Text(label, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14))),
+      Text(qty is double ? qty.toStringAsFixed(0) : qty, style: GoogleFonts.cairo(fontWeight: FontWeight.w800, fontSize: 18, color: color)),
+      const SizedBox(width: 8),
+      Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Text('$count', style: GoogleFonts.cairo(fontSize: 11, color: color, fontWeight: FontWeight.w600))),
+    ]);
   }
 }

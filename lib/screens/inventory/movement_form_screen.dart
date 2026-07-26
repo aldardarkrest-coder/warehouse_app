@@ -7,6 +7,7 @@ import '../../services/warehouse_service.dart';
 import '../../models/item.dart';
 import '../../models/warehouse.dart';
 import '../../models/inventory_movement.dart';
+import '../../widgets/searchable_dropdown.dart';
 
 class MovementFormScreen extends StatefulWidget {
   final AuthService authService;
@@ -33,6 +34,8 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   String? _warehouseId;
   String? _destinationWarehouseId;
   bool _isLoading = false;
+  bool _dataLoading = true;
+  String? _dataError;
   List<Item> _items = [];
   List<Warehouse> _warehouses = [];
 
@@ -44,11 +47,20 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   }
 
   Future<void> _loadData() async {
+    setState(() { _dataLoading = true; _dataError = null; });
     try {
-      final items = await ItemService().getAll(onlyActive: true);
-      final warehouses = await WarehouseService().getAll(onlyActive: true);
-      if (mounted) setState(() { _items = items; _warehouses = warehouses; });
-    } catch (_) {}
+      final results = await Future.wait([
+        ItemService().getAll(onlyActive: true),
+        WarehouseService().getAll(onlyActive: true),
+      ]);
+      if (mounted) setState(() {
+        _items = results[0] as List<Item>;
+        _warehouses = results[1] as List<Warehouse>;
+        _dataLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() { _dataError = 'فشل تحميل البيانات'; _dataLoading = false; });
+    }
   }
 
   @override
@@ -155,30 +167,43 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
                     Text('بيانات الحركة', style: GoogleFonts.cairo(
                       fontWeight: FontWeight.w700, fontSize: 18, color: const Color(0xFF1F2937),
                     )),
+                    if (_dataError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(color: const Color(0xFFEF4444).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                          child: Row(children: [
+                            const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(_dataError!, style: GoogleFonts.cairo(color: const Color(0xFFEF4444)))),
+                          ]),
+                        ),
+                      ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _itemId,
-                      decoration: const InputDecoration(labelText: 'الصنف'),
-                      items: _items.map((i) => DropdownMenuItem(value: i.id, child: Text('${i.name} (${i.sku})'))).toList(),
+                    SearchableDropdownFormField<String>(
+                      labelText: 'الصنف',
+                      value: _itemId,
+                      options: _items.map((i) => SearchableDropdownOption(value: i.id!, label: i.name, subtitle: i.sku)).toList(),
                       onChanged: (v) => setState(() => _itemId = v),
-                      validator: (v) => v == null ? 'يرجى اختيار صنف' : null,
+                      isLoading: _dataLoading,
                     ),
                     const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      initialValue: _warehouseId,
-                      decoration: InputDecoration(labelText: _isTransfer ? 'من مستودع' : 'المستودع'),
-                      items: _warehouses.map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                    SearchableDropdownFormField<String>(
+                      labelText: _isTransfer ? 'من مستودع' : 'المستودع',
+                      value: _warehouseId,
+                      options: _warehouses.map((w) => SearchableDropdownOption(value: w.id!, label: w.name, subtitle: w.location)).toList(),
                       onChanged: (v) => setState(() => _warehouseId = v),
-                      validator: (v) => v == null ? 'يرجى اختيار مستودع' : null,
+                      isLoading: _dataLoading,
                     ),
                     if (_isTransfer) ...[
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        initialValue: _destinationWarehouseId,
-                        decoration: const InputDecoration(labelText: 'إلى مستودع'),
-                        items: _warehouses.where((w) => w.id != _warehouseId).map((w) => DropdownMenuItem(value: w.id, child: Text(w.name))).toList(),
+                      SearchableDropdownFormField<String>(
+                        labelText: 'إلى مستودع',
+                        value: _destinationWarehouseId,
+                        options: _warehouses.where((w) => w.id != _warehouseId).map((w) => SearchableDropdownOption(value: w.id!, label: w.name, subtitle: w.location)).toList(),
                         onChanged: (v) => setState(() => _destinationWarehouseId = v),
-                        validator: (v) => v == null ? 'يرجى اختيار مستودع الوجهة' : null,
+                        isLoading: _dataLoading,
                       ),
                     ],
                     const SizedBox(height: 16),

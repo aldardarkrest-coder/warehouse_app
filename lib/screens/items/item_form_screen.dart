@@ -5,6 +5,7 @@ import '../../services/item_service.dart';
 import '../../services/category_service.dart';
 import '../../models/item.dart';
 import '../../models/category.dart';
+import '../../widgets/searchable_dropdown.dart';
 
 class ItemFormScreen extends StatefulWidget {
   final AuthService authService;
@@ -26,6 +27,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   String? _categoryId;
   bool _isActive = true;
   bool _isLoading = false;
+  bool _catLoading = true;
+  String? _catError;
   List<Category> _categories = [];
 
   @override
@@ -44,10 +47,13 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   }
 
   Future<void> _loadCategories() async {
+    setState(() { _catLoading = true; _catError = null; });
     try {
       final cats = await CategoryService().getAll(onlyActive: true);
-      if (mounted) setState(() => _categories = cats);
-    } catch (_) {}
+      if (mounted) setState(() { _categories = cats; _catLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _catError = 'فشل تحميل التصنيفات'; _catLoading = false; });
+    }
   }
 
   @override
@@ -104,11 +110,13 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               TextFormField(controller: _skuController, decoration: const InputDecoration(labelText: 'رمز SKU'),
                 validator: (v) => v == null || v.trim().isEmpty ? 'رمز SKU مطلوب' : null),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _categoryId,
-                decoration: const InputDecoration(labelText: 'التصنيف'),
-                items: _categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
+              SearchableDropdownFormField<String>(
+                labelText: 'التصنيف',
+                value: _categoryId,
+                options: _categories.map((c) => SearchableDropdownOption(value: c.id!, label: c.name)).toList(),
                 onChanged: (v) => setState(() => _categoryId = v),
+                isLoading: _catLoading,
+                errorMessage: _catError,
               ),
               const SizedBox(height: 16),
               Row(

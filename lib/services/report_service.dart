@@ -56,4 +56,28 @@ class ReportService {
       return {'warehouses': <Map<String, dynamic>>[]};
     }
   }
+
+  Future<List<Map<String, dynamic>>> getFilteredMovements({
+    String? type,
+    DateTime? from,
+    DateTime? to,
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    try {
+      var query = _client
+          .from('inventory_movements')
+          .select('*, items(name), warehouses(name), profiles(full_name)')
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      if (type != null) query = query.eq('type', type);
+      if (from != null) query = query.gte('created_at', from.toIso8601String());
+      if (to != null) query = query.lte('created_at', to.toIso8601String());
+
+      return (await query) as List<Map<String, dynamic>>;
+    } catch (_) {
+      return [];
+    }
+  }
 }
