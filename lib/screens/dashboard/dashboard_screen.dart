@@ -121,20 +121,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ]),
     );
   }
-
-  Widget _lowStockWarning(int lowStock) {
-    if (lowStock <= 0) return const SizedBox();
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFFEF4444).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-      child: Row(children: [
-        const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 20),
-        const SizedBox(width: 8),
-        Expanded(child: Text('$lowStock صنف بمخزون منخفض', style: GoogleFonts.cairo(color: const Color(0xFFEF4444), fontWeight: FontWeight.w600))),
-      ]),
-    );
-  }
 }
 
 class _StatCard extends StatelessWidget {
