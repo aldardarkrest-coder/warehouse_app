@@ -1,4 +1,4 @@
-enum UserRole { admin, warehouseManager, employee }
+enum UserRole { admin, warehouseManager, employee, accountant }
 
 extension UserRoleExtension on UserRole {
   String get value {
@@ -9,6 +9,8 @@ extension UserRoleExtension on UserRole {
         return 'warehouse_manager';
       case UserRole.employee:
         return 'employee';
+      case UserRole.accountant:
+        return 'accountant';
     }
   }
 
@@ -20,6 +22,8 @@ extension UserRoleExtension on UserRole {
         return 'مدير مستودع';
       case UserRole.employee:
         return 'موظف';
+      case UserRole.accountant:
+        return 'محاسب';
     }
   }
 
@@ -29,6 +33,8 @@ extension UserRoleExtension on UserRole {
         return UserRole.admin;
       case 'warehouse_manager':
         return UserRole.warehouseManager;
+      case 'accountant':
+        return UserRole.accountant;
       default:
         return UserRole.employee;
     }

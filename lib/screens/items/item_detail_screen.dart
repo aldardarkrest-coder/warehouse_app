@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../models/item.dart';
-import '../../models/inventory_movement.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 
@@ -18,7 +17,7 @@ class ItemDetailScreen extends StatefulWidget {
 
 class _ItemDetailScreenState extends State<ItemDetailScreen> {
   final _inventoryService = InventoryService();
-  List<InventoryItem>? _stockLevels;
+  List<Map<String, dynamic>>? _stockLevels;
   bool _isLoading = true;
   String? _error;
 
@@ -31,8 +30,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      final allStock = await _inventoryService.getStockLevels();
-      final filtered = allStock.where((s) => s.itemId == widget.item.id).toList();
+      final allStock = await _inventoryService.getBalances();
+      final filtered = allStock.where((s) => s['item_id'] == widget.item.id).toList();
       if (mounted) setState(() { _stockLevels = filtered; _isLoading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
@@ -56,7 +55,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   const SizedBox(height: 8),
                   _infoRow(context, 'رمز SKU', widget.item.sku),
                   if (widget.item.categoryName != null) _infoRow(context, 'التصنيف', widget.item.categoryName!),
-                  _infoRow(context, 'الوحدة', widget.item.unit),
+                  _infoRow(context, 'الوحدة', widget.item.baseUnitName ?? widget.item.baseUnitSymbol ?? ''),
                   _infoRow(context, 'الحد الأدنى', widget.item.minStockLevel.toString()),
                   if (widget.item.description != null) _infoRow(context, 'الوصف', widget.item.description!),
                 ],
@@ -71,20 +70,26 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
           else if (_stockLevels!.isEmpty)
             const Card(child: Padding(padding: EdgeInsets.all(24), child: Center(child: Text('لا يوجد مخزون'))))
           else
-            ..._stockLevels!.map((s) => Card(
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: (s.isLowStock ? Colors.red : Colors.green).withValues(alpha: 0.2),
-                  child: Icon(s.isLowStock ? Icons.warning : Icons.check_circle,
-                      color: s.isLowStock ? Colors.red : Colors.green),
+            ..._stockLevels!.map((s) {
+              final qty = (s['quantity_base'] as num?)?.toDouble() ?? 0;
+              final whData = s['warehouses'] as Map?;
+              final minStock = widget.item.minStockLevel;
+              final isLowStock = qty <= minStock;
+              return Card(
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: (isLowStock ? Colors.red : Colors.green).withValues(alpha: 0.2),
+                    child: Icon(isLowStock ? Icons.warning : Icons.check_circle,
+                        color: isLowStock ? Colors.red : Colors.green),
+                  ),
+                  title: Text(whData?['name'] as String? ?? 'غير معروف'),
+                  trailing: Text(qty.toStringAsFixed(0), style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: isLowStock ? Colors.red : null,
+                  )),
                 ),
-                title: Text(s.warehouseName ?? 'غير معروف'),
-                trailing: Text(s.quantity.toString(), style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: s.isLowStock ? Colors.red : null,
-                )),
-              ),
-            )),
+              );
+            }),
         ],
       ),
     );

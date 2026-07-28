@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../services/item_service.dart';
 import '../../services/warehouse_service.dart';
 import '../../models/item.dart';
 import '../../models/warehouse.dart';
-import '../../models/inventory_movement.dart';
+import '../../models/inventory_transaction.dart';
 import '../../widgets/searchable_dropdown.dart';
 
 class MovementFormScreen extends StatefulWidget {
@@ -38,6 +39,7 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   String? _dataError;
   List<Item> _items = [];
   List<Warehouse> _warehouses = [];
+  Map<String, String> _itemBaseUnitIds = {};
 
   @override
   void initState() {
@@ -56,6 +58,7 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
       if (mounted) { setState(() {
         _items = results[0] as List<Item>;
         _warehouses = results[1] as List<Warehouse>;
+        _itemBaseUnitIds = {for (final i in _items) i.id!: i.baseUnitId};
         _dataLoading = false;
       }); }
     } catch (_) {
@@ -90,33 +93,45 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
       if (user == null) throw Exception('غير مصرح به');
       final service = InventoryService();
 
-      if (_isTransfer) {
-        await service.createMovement(InventoryMovement(
-          itemId: _itemId!, warehouseId: _warehouseId!,
-          type: MovementType.out, quantity: double.parse(_quantityController.text),
-          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-          createdBy: user.id,
-        ));
-        await service.createMovement(InventoryMovement(
-          itemId: _itemId!, warehouseId: _destinationWarehouseId!,
-          type: MovementType.in_, quantity: double.parse(_quantityController.text),
-          notes: 'تحويل من ${_warehouses.firstWhere((w) => w.id == _warehouseId).name}',
-          createdBy: user.id,
-        ));
-      } else {
-        await service.createMovement(InventoryMovement(
-          itemId: _itemId!, warehouseId: _warehouseId!,
-          type: _type == 'in' ? MovementType.in_ : MovementType.out,
-          quantity: double.parse(_quantityController.text),
-          referenceType: _refTypeController.text.trim().isEmpty ? null : _refTypeController.text.trim(),
-          referenceId: _refIdController.text.trim().isEmpty ? null : _refIdController.text.trim(),
-          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
-          createdBy: user.id,
-        ));
-      }
+      // Get user's first branch (ponytail: multi-branch selection later)
+      final branches = await Supabase.instance.client.from('branches').select('id').limit(1);
+      final branchId = (branches as List).first['id'] as String;
+
+      final qty = double.parse(_quantityController.text);
+      final item = _items.firstWhere((i) => i.id == _itemId);
+
+      final txType = _isTransfer
+          ? TransactionType.transfer
+          : _type == 'in' ? TransactionType.purchaseReceipt : TransactionType.salesIssue;
+
+      // Create transaction header
+      final tx = await service.createTransaction(InventoryTransaction(
+        branchId: branchId,
+        type: txType,
+        sourceWarehouseId: _isTransfer ? _warehouseId : _type == 'out' ? _warehouseId : null,
+        destinationWarehouseId: _isTransfer ? _destinationWarehouseId : _type == 'in' ? _warehouseId : null,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+        createdBy: user.id,
+      ));
+
+      // Create single line (ponytail: multi-line UI if needed)
+      if (tx.id == null) throw Exception('فشل إنشاء الحركة');
+      await service.createTransactionLine(InventoryTransactionLine(
+        transactionId: tx.id!,
+        lineNo: 1,
+        itemId: item.id!,
+        itemUnitId: item.baseUnitId,
+        quantity: qty,
+        factorToBase: 1,
+        notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+      ));
+
+      // Post immediately (ponytail: draft-then-post workflow later)
+      await service.postTransaction(tx.id!);
+
       if (mounted) Navigator.of(context).pop(true);
     } catch (e) {
-      if (mounted)       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo())));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e', style: GoogleFonts.cairo())));
     } finally { if (mounted) setState(() => _isLoading = false); }
   }
 

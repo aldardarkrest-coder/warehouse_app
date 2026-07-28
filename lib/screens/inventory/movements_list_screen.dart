@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
-import '../../models/inventory_movement.dart';
+import '../../models/inventory_transaction.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 
@@ -15,7 +15,7 @@ class MovementsListScreen extends StatefulWidget {
 
 class _MovementsListScreenState extends State<MovementsListScreen> {
   final _service = InventoryService();
-  List<InventoryMovement>? _movements;
+  List<InventoryTransaction>? _transactions;
   bool _isLoading = true;
   String? _error;
 
@@ -25,8 +25,8 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
     try {
-      final data = await _service.getMovements();
-      if (mounted) setState(() { _movements = data; _isLoading = false; });
+      final data = await _service.getTransactions();
+      if (mounted) setState(() { _transactions = data; _isLoading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _isLoading = false; });
     }
@@ -39,7 +39,7 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
     return RefreshIndicator(
       onRefresh: _load,
       color: const Color(0xFF1A56DB),
-      child: _movements!.isEmpty
+      child: _transactions!.isEmpty
           ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
               Icon(Icons.swap_horiz_rounded, size: 64, color: Colors.grey.shade300),
               const SizedBox(height: 16),
@@ -47,13 +47,12 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
           ]))
           : ListView.builder(
               padding: const EdgeInsets.all(12),
-              itemCount: _movements!.length,
+              itemCount: _transactions!.length,
               itemBuilder: (_, i) {
-                final m = _movements![i];
-                final isIn = m.type == MovementType.in_;
-                final isOut = m.type == MovementType.out;
-                final color = isIn ? const Color(0xFF10B981) : isOut ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
-                final icon = isIn ? Icons.add_rounded : isOut ? Icons.remove_rounded : Icons.swap_horiz_rounded;
+                final m = _transactions![i];
+                final isPost = m.status == TransactionStatus.posted;
+                final isDraft = m.status == TransactionStatus.draft;
+                final color = isDraft ? Colors.grey : const Color(0xFF10B981);
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -71,18 +70,18 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
                           color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(icon, color: color, size: 20),
+                        child: Icon(Icons.receipt_long_rounded, color: color, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(m.itemName ?? 'غير معروف',
+                            Text(m.type.displayName,
                                 style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14)),
                             const SizedBox(height: 2),
                             Text(
-                              '${m.type.displayName} · ${m.warehouseName ?? ""}',
+                              '#${m.transactionNo ?? ''} · ${m.status.displayName}',
                               style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12),
                             ),
                             if (m.createdByName != null && m.createdByName!.isNotEmpty)
@@ -96,9 +95,10 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text(
-                            '${m.quantity}',
-                            style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 16, color: color),
+                          Icon(
+                            isPost ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                            color: isPost ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                            size: 20,
                           ),
                           if (m.createdAt != null)
                             Text(

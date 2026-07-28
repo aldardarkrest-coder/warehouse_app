@@ -4,7 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
-import '../../models/inventory_movement.dart';
+import '../../models/inventory_transaction.dart';
 
 class DashboardScreen extends StatefulWidget {
   final AuthService authService;
@@ -41,7 +41,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final lowStockCount = _stats!['low_stock_count'] as int;
     final totalItems = _stats!['total_items'] as int;
     final totalWarehouses = _stats!['total_warehouses'] as int;
-    final recentMovements = _stats!['recent_movements'] as List<InventoryMovement>;
+    final recentTransactions = _stats!['recent_transactions'] as List<InventoryTransaction>;
 
     return RefreshIndicator(
       onRefresh: _loadStats,
@@ -117,7 +117,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: const Color(0xFF1F2937),
                 ),
               ),
-              if (recentMovements.isNotEmpty)
+              if (recentTransactions.isNotEmpty)
                 TextButton(
                   onPressed: () {},
                   child: Text('عرض الكل', style: GoogleFonts.cairo(color: const Color(0xFF1A56DB), fontWeight: FontWeight.w600)),
@@ -125,7 +125,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          if (recentMovements.isEmpty)
+          if (recentTransactions.isEmpty)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(32),
@@ -143,7 +143,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             )
           else
-            ...recentMovements.map((m) => _MovementCard(movement: m)),
+            ...recentTransactions.map((m) => _TransactionCard(transaction: m)),
         ],
       ),
     );
@@ -200,17 +200,15 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _MovementCard extends StatelessWidget {
-  final InventoryMovement movement;
-  const _MovementCard({required this.movement});
+class _TransactionCard extends StatelessWidget {
+  final InventoryTransaction transaction;
+  const _TransactionCard({required this.transaction});
 
   @override
   Widget build(BuildContext context) {
-    final isIn = movement.type == MovementType.in_;
-    final isOut = movement.type == MovementType.out;
-    final color = isIn ? const Color(0xFF10B981) : isOut ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
-    final icon = isIn ? Icons.add_rounded : isOut ? Icons.remove_rounded : Icons.swap_horiz_rounded;
-    final label = isIn ? 'إدخال' : isOut ? 'إخراج' : 'تحويل';
+    final isPosted = transaction.status == TransactionStatus.posted;
+    final color = isPosted ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    final icon = isPosted ? Icons.check_circle_rounded : Icons.schedule_rounded;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -236,12 +234,12 @@ class _MovementCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  movement.itemName ?? 'غير معروف',
+                  transaction.type.displayName,
                   style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$label · ${movement.warehouseName ?? ""}',
+                  '#${transaction.transactionNo ?? ''} · ${transaction.status.displayName}',
                   style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12),
                 ),
               ],
@@ -250,15 +248,10 @@ class _MovementCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '${movement.quantity}',
-                style: GoogleFonts.cairo(
-                  fontWeight: FontWeight.w700, fontSize: 16, color: color,
-                ),
-              ),
-              if (movement.createdAt != null)
+              Icon(icon, color: color, size: 20),
+              if (transaction.createdAt != null)
                 Text(
-                  '${movement.createdAt!.day}/${movement.createdAt!.month}/${movement.createdAt!.year}',
+                  '${transaction.createdAt!.day}/${transaction.createdAt!.month}/${transaction.createdAt!.year}',
                   style: GoogleFonts.cairo(color: const Color(0xFFD1D5DB), fontSize: 11),
                 ),
             ],

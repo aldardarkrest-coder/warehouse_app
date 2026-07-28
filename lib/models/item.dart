@@ -5,7 +5,11 @@ class Item {
   final String sku;
   final String? categoryId;
   final String? categoryName;
-  final String unit;
+  final String baseUnitId;
+  final String? baseUnitName;
+  final String? baseUnitSymbol;
+  final bool trackBatch;
+  final bool trackExpiry;
   final double minStockLevel;
   final bool isActive;
   final DateTime? createdAt;
@@ -18,7 +22,11 @@ class Item {
     required this.sku,
     this.categoryId,
     this.categoryName,
-    this.unit = 'piece',
+    required this.baseUnitId,
+    this.baseUnitName,
+    this.baseUnitSymbol,
+    this.trackBatch = false,
+    this.trackExpiry = false,
     this.minStockLevel = 0,
     this.isActive = true,
     this.createdAt,
@@ -26,6 +34,7 @@ class Item {
   });
 
   factory Item.fromJson(Map<String, dynamic> json) {
+    final unitData = json['base_unit'] as Map<String, dynamic>?;
     return Item(
       id: json['id'] as String?,
       name: json['name'] as String,
@@ -35,7 +44,11 @@ class Item {
       categoryName: json['categories'] != null
           ? (json['categories'] as Map<String, dynamic>)['name'] as String?
           : null,
-      unit: json['unit'] as String? ?? 'piece',
+      baseUnitId: json['base_unit_id'] as String,
+      baseUnitName: unitData?['name'] as String?,
+      baseUnitSymbol: unitData?['symbol'] as String?,
+      trackBatch: json['track_batch'] as bool? ?? false,
+      trackExpiry: json['track_expiry'] as bool? ?? false,
       minStockLevel: (json['min_stock_level'] as num?)?.toDouble() ?? 0,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
@@ -49,7 +62,9 @@ class Item {
     'description': description,
     'sku': sku,
     'category_id': categoryId,
-    'unit': unit,
+    'base_unit_id': baseUnitId,
+    'track_batch': trackBatch,
+    'track_expiry': trackExpiry,
     'min_stock_level': minStockLevel,
     'is_active': isActive,
   };

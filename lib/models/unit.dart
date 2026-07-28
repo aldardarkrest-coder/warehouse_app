@@ -1,37 +1,31 @@
-class Supplier {
+class Unit {
   final String? id;
-  final String? code;
+  final String code;
   final String name;
-  final String? contactPerson;
-  final String? email;
-  final String? phone;
-  final String? address;
+  final String? symbol;
+  final int decimalPlaces;
   final bool isActive;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  Supplier({
+  Unit({
     this.id,
-    this.code,
+    required this.code,
     required this.name,
-    this.contactPerson,
-    this.email,
-    this.phone,
-    this.address,
+    this.symbol,
+    this.decimalPlaces = 0,
     this.isActive = true,
     this.createdAt,
     this.updatedAt,
   });
 
-  factory Supplier.fromJson(Map<String, dynamic> json) {
-    return Supplier(
+  factory Unit.fromJson(Map<String, dynamic> json) {
+    return Unit(
       id: json['id'] as String?,
-      code: json['code'] as String?,
+      code: json['code'] as String,
       name: json['name'] as String,
-      contactPerson: json['contact_person'] as String?,
-      email: json['email'] as String?,
-      phone: json['phone'] as String?,
-      address: json['address'] as String?,
+      symbol: json['symbol'] as String?,
+      decimalPlaces: (json['decimal_places'] as num?)?.toInt() ?? 0,
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
@@ -42,10 +36,8 @@ class Supplier {
     if (id != null) 'id': id,
     'code': code,
     'name': name,
-    'contact_person': contactPerson,
-    'email': email,
-    'phone': phone,
-    'address': address,
+    'symbol': symbol,
+    'decimal_places': decimalPlaces,
     'is_active': isActive,
   };
 }

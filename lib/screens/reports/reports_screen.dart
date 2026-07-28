@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/inventory_service.dart';
 import '../../services/report_service.dart';
+import '../../models/inventory_transaction.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 
@@ -55,14 +56,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   List<Map<String, dynamic>> get _filteredMovements {
     var list = _movements;
-    if (_typeFilter == 'in') list = list.where((m) => m['type'] == 'in').toList();
-    if (_typeFilter == 'out') list = list.where((m) => m['type'] == 'out').toList();
-    if (_typeFilter == 'transfer') list = list.where((m) => m['type'] == 'transfer').toList();
+    if (_typeFilter != 'all') list = list.where((m) => m['transaction_type'] == _typeFilter).toList();
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
       list = list.where((m) =>
-        (m['items'] as Map?)?['name']?.toString().toLowerCase().contains(q) == true ||
-        (m['warehouses'] as Map?)?['name']?.toString().toLowerCase().contains(q) == true ||
+        (m['transaction_type'] as String?)?.toString().toLowerCase().contains(q) == true ||
+        (m['branches'] as Map?)?['name']?.toString().toLowerCase().contains(q) == true ||
         (m['profiles'] as Map?)?['full_name']?.toString().toLowerCase().contains(q) == true
       ).toList();
     }
@@ -71,15 +70,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   void _exportCsv() {
     final rows = StringBuffer();
-    rows.writeln('التاريخ,الصنف,نوع الحركة,المستودع,الكمية,بواسطة');
+    rows.writeln('التاريخ,نوع الحركة,الفرع,الحالة,بواسطة');
     for (final m in _filteredMovements) {
       final date = m['created_at']?.toString().substring(0, 10) ?? '';
-      final item = (m['items'] as Map?)?['name'] as String? ?? '';
-      final type = m['type'] == 'in' ? 'إدخال' : m['type'] == 'out' ? 'إخراج' : 'تحويل';
-      final wh = (m['warehouses'] as Map?)?['name'] as String? ?? '';
-      final qty = (m['quantity'] as num?)?.toStringAsFixed(0) ?? '0';
+      final txType = m['transaction_type'] as String? ?? '';
+      final branch = (m['branches'] as Map?)?['name'] as String? ?? '';
+      final status = m['status'] as String? ?? '';
       final by = (m['profiles'] as Map?)?['full_name'] as String? ?? '';
-      rows.writeln('$date,$item,$type,$wh,$qty,$by');
+      rows.writeln('$date,$txType,$branch,$status,$by');
     }
 
     Clipboard.setData(ClipboardData(text: rows.toString()));
@@ -222,9 +220,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
             child: Row(children: [
               _filterChip('all', 'الكل'),
               const SizedBox(width: 6),
-              _filterChip('in', 'إدخال'),
+              _filterChip('purchase_receipt', 'استلام'),
               const SizedBox(width: 6),
-              _filterChip('out', 'إخراج'),
+              _filterChip('sales_issue', 'صرف'),
               const SizedBox(width: 6),
               _filterChip('transfer', 'تحويل'),
             ]),
@@ -254,26 +252,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
               dataTextStyle: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF1F2937)),
               columns: const [
                 DataColumn(label: Text('التاريخ')),
-                DataColumn(label: Text('الصنف')),
-                DataColumn(label: Text('النوع')),
-                DataColumn(label: Text('المستودع')),
-                DataColumn(label: Text('الكمية'), numeric: true),
+                DataColumn(label: Text('نوع الحركة')),
+                DataColumn(label: Text('الفرع')),
+                DataColumn(label: Text('الحالة')),
                 DataColumn(label: Text('بواسطة')),
               ],
               rows: _filteredMovements.map((m) {
-                final type = m['type'] as String?;
-                final typeColor = type == 'in' ? const Color(0xFF10B981) : type == 'out' ? const Color(0xFFEF4444) : const Color(0xFFF59E0B);
-                final typeLabel = type == 'in' ? 'إدخال' : type == 'out' ? 'إخراج' : 'تحويل';
+                final txTypeVal = m['transaction_type'] as String? ?? '';
+                final txType = TransactionType.fromString(txTypeVal);
+                final status = m['status'] as String? ?? '';
+                final isPosted = status == 'posted';
                 return DataRow(cells: [
                   DataCell(Text(m['created_at']?.toString().substring(0, 10) ?? '', style: GoogleFonts.cairo(fontSize: 11, color: const Color(0xFF9CA3AF)))),
-                  DataCell(Text((m['items'] as Map?)?['name'] as String? ?? '')),
+                  DataCell(Text(txType.displayName, style: GoogleFonts.cairo(fontWeight: FontWeight.w600))),
+                  DataCell(Text((m['branches'] as Map?)?['name'] as String? ?? '')),
                   DataCell(Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(color: typeColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                    child: Text(typeLabel, style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w600, color: typeColor)),
+                    decoration: BoxDecoration(
+                      color: (isPosted ? const Color(0xFF10B981) : const Color(0xFFF59E0B)).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(isPosted ? 'مرحل' : 'مسودة', style: GoogleFonts.cairo(
+                      fontSize: 11, fontWeight: FontWeight.w600,
+                      color: isPosted ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                    )),
                   )),
-                  DataCell(Text((m['warehouses'] as Map?)?['name'] as String? ?? '')),
-                  DataCell(Text((m['quantity'] as num?)?.toStringAsFixed(0) ?? '0', style: GoogleFonts.cairo(fontWeight: FontWeight.w700))),
                   DataCell(Text((m['profiles'] as Map?)?['full_name'] as String? ?? '', style: GoogleFonts.cairo(fontSize: 11, color: const Color(0xFF6B7280)))),
                 ]);
               }).toList(),

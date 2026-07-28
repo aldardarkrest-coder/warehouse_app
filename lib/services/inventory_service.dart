@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/inventory_movement.dart';
+import '../models/inventory_transaction.dart';
+import '../models/inventory_transaction_line.dart';
 import 'local_storage_service.dart';
 
 class InventoryService {
@@ -8,134 +9,127 @@ class InventoryService {
   InventoryService([SupabaseClient? client])
       : _client = client ?? Supabase.instance.client;
 
-  Future<List<InventoryMovement>> getMovements({int limit = 50}) async {
+  Future<List<InventoryTransaction>> getTransactions({int limit = 50}) async {
     try {
       final data = await _client
-          .from('inventory_movements')
-          .select('*, items(name), warehouses(name)')
+          .from('inventory_transactions')
+          .select('*, branches(name), source_warehouses:warehouses!source_warehouse_id(name), destination_warehouses:warehouses!destination_warehouse_id(name), suppliers(name), customers(name), profiles!created_by(full_name)')
           .order('created_at', ascending: false)
           .limit(limit);
-      await LocalStorageService.instance.cacheList('inventory_movements', data);
-      final movements = data.map((e) => InventoryMovement.fromJson(e)).toList();
-      await _enrichCreatorNames(movements);
-      return movements;
+      await LocalStorageService.instance.cacheList('inventory_transactions', data);
+      return data.map((e) => InventoryTransaction.fromJson(e)).toList();
     } catch (_) {
-      final cached = await LocalStorageService.instance.getCachedList('inventory_movements');
-      return cached.map((e) => InventoryMovement.fromJson(e)).toList();
+      final cached = await LocalStorageService.instance.getCachedList('inventory_transactions');
+      return cached.map((e) => InventoryTransaction.fromJson(e)).toList();
     }
   }
 
-  Future<List<InventoryItem>> getStockLevels({String? warehouseId}) async {
-    try {
-      var data = await _client
-          .from('inventory_items')
-          .select('*, items(name, sku, min_stock_level), warehouses(name)')
-          .order('items(name)');
-      await LocalStorageService.instance.cacheList('inventory_items', data);
-      var list = data.map((e) => InventoryItem.fromJson(e)).toList();
-      if (warehouseId != null) {
-        list = list.where((item) => item.warehouseId == warehouseId).toList();
-      }
-      return list;
-    } catch (_) {
-      final cached = await LocalStorageService.instance.getCachedList('inventory_items');
-      var list = cached.map((e) => InventoryItem.fromJson(e)).toList();
-      if (warehouseId != null) {
-        list = list.where((item) => item.warehouseId == warehouseId).toList();
-      }
-      return list;
-    }
-  }
-
-  Future<List<InventoryItem>> getLowStock() async {
-    final all = await getStockLevels();
-    return all.where((item) => item.quantity <= 0).toList();
-  }
-
-  Future<InventoryMovement> createMovement(InventoryMovement movement) async {
+  Future<InventoryTransaction> createTransaction(InventoryTransaction tx) async {
     try {
       final data = await _client
-          .from('inventory_movements')
-          .insert(movement.toJson())
+          .from('inventory_transactions')
+          .insert(tx.toJson())
           .select()
           .single();
-      await LocalStorageService.instance.cacheItem('inventory_movements', data);
-      return InventoryMovement.fromJson(data);
+      await LocalStorageService.instance.cacheItem('inventory_transactions', data);
+      return InventoryTransaction.fromJson(data);
     } catch (_) {
-      await LocalStorageService.instance.queueOperation('inventory_movements', 'INSERT', null, movement.toJson());
-      throw Exception(LocalStorageService.instance.errorOffline);
+      await LocalStorageService.instance.queueOperation('inventory_transactions', 'INSERT', null, tx.toJson());
+      rethrow;
     }
+  }
+
+  Future<void> createTransactionLine(InventoryTransactionLine line) async {
+    try {
+      await _client.from('inventory_transaction_lines').insert(line.toJson());
+    } catch (_) {
+      await LocalStorageService.instance.queueOperation('inventory_transaction_lines', 'INSERT', null, line.toJson());
+      rethrow;
+    }
+  }
+
+  Future<void> postTransaction(String transactionId) async {
+    try {
+      await _client.rpc('post_inventory_transaction', params: {'p_transaction_id': transactionId});
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<void> cancelTransaction(String transactionId, String reason) async {
+    try {
+      await _client.rpc('cancel_inventory_transaction', params: {
+        'p_transaction_id': transactionId,
+        'p_reason': reason,
+      });
+    } catch (_) {
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getBalances({String? warehouseId}) async {
+    try {
+      var data = await _client
+          .from('inventory_balances')
+          .select('*, items!inner(name, sku, min_stock_level), warehouses!inner(name)')
+          .order('items(name)');
+      var list = (data as List).cast<Map<String, dynamic>>();
+      if (warehouseId != null) {
+        list = list.where((r) => r['warehouse_id'] == warehouseId).toList();
+      }
+      await LocalStorageService.instance.cacheList('inventory_balances', data);
+      return list;
+    } catch (_) {
+      final cached = await LocalStorageService.instance.getCachedList('inventory_balances');
+      var list = cached.cast<Map<String, dynamic>>();
+      if (warehouseId != null) {
+        list = list.where((r) => r['warehouse_id'] == warehouseId).toList();
+      }
+      return list;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getLowStock() async {
+    final all = await getBalances();
+    return all.where((r) => (r['quantity_base'] as num?)?.toDouble() ?? 0 <= 0).toList();
   }
 
   Future<Map<String, dynamic>> getDashboardStats() async {
     int totalItems = 0, totalWarehouses = 0, lowStockCount = 0;
-    List<InventoryMovement> recentMovements = [];
+    List<InventoryTransaction> recentTransactions = [];
 
     try {
       final itemsResp = await _client.from('items').select('id');
-      final warehousesResp = await _client.from('warehouses').select('id');
       totalItems = (itemsResp as List).length;
-      totalWarehouses = (warehousesResp as List).length;
+
+      final wResp = await _client.from('warehouses').select('id');
+      totalWarehouses = (wResp as List).length;
 
       final recentData = await _client
-          .from('inventory_movements')
-          .select('*, items(name), warehouses(name)')
+          .from('inventory_transactions')
+          .select('*, branches(name), source_warehouses:warehouses!source_warehouse_id(name), destination_warehouses:warehouses!destination_warehouse_id(name), suppliers(name), customers(name), profiles!created_by(full_name)')
           .order('created_at', ascending: false)
           .limit(10);
-      await LocalStorageService.instance.cacheList('inventory_movements', recentData);
-      recentMovements = recentData.map((e) => InventoryMovement.fromJson(e)).toList();
-      await _enrichCreatorNames(recentMovements);
+      await LocalStorageService.instance.cacheList('inventory_transactions', recentData);
+      recentTransactions = recentData.map((e) => InventoryTransaction.fromJson(e)).toList();
 
       final allStock = await _client
-          .from('inventory_items')
-          .select('*, items!inner(name, sku, min_stock_level), warehouses(name)');
-      await LocalStorageService.instance.cacheList('inventory_items', allStock);
-      lowStockCount = allStock.where((s) => (s['quantity'] as num) <= 0).length;
+          .from('inventory_balances')
+          .select('quantity_base');
+      lowStockCount = allStock.where((s) => (s['quantity_base'] as num?)?.toDouble() ?? 0 <= 0).length;
     } catch (_) {
-      final cachedMovements = await LocalStorageService.instance.getCachedList('inventory_movements');
-      recentMovements = cachedMovements.map((e) => InventoryMovement.fromJson(e)).take(10).toList();
+      final cachedTx = await LocalStorageService.instance.getCachedList('inventory_transactions');
+      recentTransactions = cachedTx.map((e) => InventoryTransaction.fromJson(e)).take(10).toList();
 
-      final cachedStock = await LocalStorageService.instance.getCachedList('inventory_items');
-      lowStockCount = cachedStock.where((s) => ((s['quantity'] as num?) ?? 0) <= 0).length;
+      final cachedBal = await LocalStorageService.instance.getCachedList('inventory_balances');
+      lowStockCount = cachedBal.where((s) => ((s['quantity_base'] as num?)?.toDouble() ?? 0) <= 0).length;
     }
 
     return {
       'total_items': totalItems,
       'total_warehouses': totalWarehouses,
-      'recent_movements': recentMovements,
+      'recent_transactions': recentTransactions,
       'low_stock_count': lowStockCount,
     };
-  }
-
-  Future<void> _enrichCreatorNames(List<InventoryMovement> movements) async {
-    final userIds = movements.map((m) => m.createdBy).toSet().toList();
-    if (userIds.isEmpty) return;
-    try {
-      final profiles = await _client
-          .from('profiles')
-          .select('id, full_name')
-          .filter('id', 'in', userIds);
-      final nameMap = {for (final p in profiles) p['id'] as String: p['full_name'] as String};
-      for (var i = 0; i < movements.length; i++) {
-        final name = nameMap[movements[i].createdBy];
-        if (name != null) {
-          movements[i] = InventoryMovement(
-            id: movements[i].id,
-            itemId: movements[i].itemId,
-            itemName: movements[i].itemName,
-            warehouseId: movements[i].warehouseId,
-            warehouseName: movements[i].warehouseName,
-            type: movements[i].type,
-            quantity: movements[i].quantity,
-            referenceType: movements[i].referenceType,
-            referenceId: movements[i].referenceId,
-            notes: movements[i].notes,
-            createdBy: movements[i].createdBy,
-            createdByName: name,
-            createdAt: movements[i].createdAt,
-          );
-        }
-      }
-    } catch (_) {}
   }
 }
