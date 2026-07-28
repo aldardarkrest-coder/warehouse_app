@@ -8,6 +8,7 @@ import '../../services/warehouse_service.dart';
 import '../../models/item.dart';
 import '../../models/warehouse.dart';
 import '../../models/inventory_transaction.dart';
+import '../../models/inventory_transaction_line.dart';
 import '../../widgets/searchable_dropdown.dart';
 
 class MovementFormScreen extends StatefulWidget {
@@ -39,7 +40,6 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
   String? _dataError;
   List<Item> _items = [];
   List<Warehouse> _warehouses = [];
-  Map<String, String> _itemBaseUnitIds = {};
 
   @override
   void initState() {
@@ -58,7 +58,6 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
       if (mounted) { setState(() {
         _items = results[0] as List<Item>;
         _warehouses = results[1] as List<Warehouse>;
-        _itemBaseUnitIds = {for (final i in _items) i.id!: i.baseUnitId};
         _dataLoading = false;
       }); }
     } catch (_) {

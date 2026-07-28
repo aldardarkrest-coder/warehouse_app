@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import '../../services/item_service.dart';
 import '../../services/category_service.dart';
 import '../../models/item.dart';
 import '../../models/category.dart';
+import '../../models/unit.dart';
 import '../../widgets/searchable_dropdown.dart';
 
 class ItemFormScreen extends StatefulWidget {
@@ -22,14 +24,17 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _skuController = TextEditingController();
-  final _unitController = TextEditingController(text: 'piece');
   final _minStockController = TextEditingController(text: '0');
   String? _categoryId;
+  String? _baseUnitId;
   bool _isActive = true;
   bool _isLoading = false;
   bool _catLoading = true;
+  bool _unitLoading = true;
   String? _catError;
+  String? _unitError;
   List<Category> _categories = [];
+  List<Unit> _units = [];
 
   @override
   void initState() {
@@ -39,11 +44,12 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       _descController.text = widget.item!.description ?? '';
       _skuController.text = widget.item!.sku;
       _categoryId = widget.item!.categoryId;
-      _unitController.text = widget.item!.unit;
+      _baseUnitId = widget.item!.baseUnitId;
       _minStockController.text = widget.item!.minStockLevel.toString();
       _isActive = widget.item!.isActive;
     }
     _loadCategories();
+    _loadUnits();
   }
 
   Future<void> _loadCategories() async {
@@ -56,12 +62,21 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
     }
   }
 
+  Future<void> _loadUnits() async {
+    setState(() { _unitLoading = true; _unitError = null; });
+    try {
+      final data = await Supabase.instance.client.from('units').select().order('name');
+      if (mounted) setState(() { _units = data.map((e) => Unit.fromJson(e)).toList(); _unitLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _unitError = 'فشل تحميل الوحدات'; _unitLoading = false; });
+    }
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _descController.dispose();
     _skuController.dispose();
-    _unitController.dispose();
     _minStockController.dispose();
     super.dispose();
   }
@@ -76,7 +91,7 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
         sku: _skuController.text.trim(),
         categoryId: _categoryId,
-        unit: _unitController.text.trim(),
+        baseUnitId: _baseUnitId!,
         minStockLevel: double.tryParse(_minStockController.text) ?? 0,
         isActive: _isActive,
       );
@@ -122,8 +137,15 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: TextFormField(controller: _unitController, decoration: const InputDecoration(labelText: 'الوحدة'),
-                      validator: (v) => v == null || v.trim().isEmpty ? 'مطلوب' : null),
+                    child: _unitLoading
+                        ? const LinearProgressIndicator()
+                        : SearchableDropdownFormField<String>(
+                            labelText: 'الوحدة الأساسية',
+                            value: _baseUnitId,
+                            options: _units.map((u) => SearchableDropdownOption(value: u.id!, label: '${u.name} (${u.symbol ?? u.code})')).toList(),
+                            onChanged: (v) => setState(() => _baseUnitId = v),
+                            errorMessage: _unitError,
+                          ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

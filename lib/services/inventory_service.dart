@@ -91,7 +91,7 @@ class InventoryService {
 
   Future<List<Map<String, dynamic>>> getLowStock() async {
     final all = await getBalances();
-    return all.where((r) => (r['quantity_base'] as num?)?.toDouble() ?? 0 <= 0).toList();
+    return all.where((r) => ((r['quantity_base'] as num?)?.toDouble() ?? 0) <= 0).toList();
   }
 
   Future<Map<String, dynamic>> getDashboardStats() async {
@@ -116,7 +116,7 @@ class InventoryService {
       final allStock = await _client
           .from('inventory_balances')
           .select('quantity_base');
-      lowStockCount = allStock.where((s) => (s['quantity_base'] as num?)?.toDouble() ?? 0 <= 0).length;
+      lowStockCount = allStock.where((s) => ((s['quantity_base'] as num?)?.toDouble() ?? 0) <= 0).length;
     } catch (_) {
       final cachedTx = await LocalStorageService.instance.getCachedList('inventory_transactions');
       recentTransactions = cachedTx.map((e) => InventoryTransaction.fromJson(e)).take(10).toList();
