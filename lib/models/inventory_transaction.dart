@@ -162,7 +162,7 @@ class InventoryTransaction {
     if (id != null) 'id': id,
     'branch_id': branchId,
     'transaction_type': type.value,
-    'transaction_date': transactionDate?.toIso8601String(),
+    if (transactionDate != null) 'transaction_date': transactionDate!.toIso8601String(),
     'source_warehouse_id': sourceWarehouseId,
     'destination_warehouse_id': destinationWarehouseId,
     'supplier_id': supplierId,
