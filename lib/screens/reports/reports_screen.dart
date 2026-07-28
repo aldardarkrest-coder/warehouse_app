@@ -225,6 +225,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
               _filterChip('sales_issue', 'صرف'),
               const SizedBox(width: 6),
               _filterChip('transfer', 'تحويل'),
+              const SizedBox(width: 6),
+              _filterChip('adjustment_in', 'تسوية+'),
+              const SizedBox(width: 6),
+              _filterChip('adjustment_out', 'تسوية-'),
+              const SizedBox(width: 6),
+              _filterChip('customer_return', 'مرتجع عميل'),
+              const SizedBox(width: 6),
+              _filterChip('supplier_return', 'مرتجع مورد'),
+              const SizedBox(width: 6),
+              _filterChip('stock_count', 'جرد'),
+              const SizedBox(width: 6),
+              _filterChip('opening_balance', 'رصيد افتتاحي'),
             ]),
           ),
         ]),
@@ -344,35 +356,53 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildSummaryTab() {
-    final ms = _movementSummary;
-    if (ms == null) return const SizedBox();
-    final totalIn = ms['total_in'] as double;
-    final totalOut = ms['total_out'] as double;
-    final countIn = ms['count_in'] as int;
-    final countOut = ms['count_out'] as int;
-    final countTransfer = ms['count_transfer'] as int;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
       child: Column(children: [
-        _summaryRow('إدخال', totalIn, countIn, const Color(0xFF10B981)),
-        const Divider(height: 24),
-        _summaryRow('إخراج', totalOut, countOut, const Color(0xFFEF4444)),
-        const Divider(height: 24),
-        _summaryRow('تحويل', '-', countTransfer, const Color(0xFFF59E0B)),
+        _summaryRow(TransactionType.purchaseReceipt),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.salesIssue),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.transfer),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.adjustmentIn),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.adjustmentOut),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.customerReturn),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.supplierReturn),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.stockCount),
+        const Divider(height: 16),
+        _summaryRow(TransactionType.openingBalance),
       ]),
     );
   }
 
-  Widget _summaryRow(String label, dynamic qty, int count, Color color) {
+  Color _typeColor(TransactionType t) {
+    switch (t) {
+      case TransactionType.purchaseReceipt: return const Color(0xFF10B981);
+      case TransactionType.salesIssue: return const Color(0xFFEF4444);
+      case TransactionType.transfer: return const Color(0xFFF59E0B);
+      case TransactionType.adjustmentIn: return const Color(0xFF22C55E);
+      case TransactionType.adjustmentOut: return const Color(0xFFDC2626);
+      case TransactionType.customerReturn: return const Color(0xFF3B82F6);
+      case TransactionType.supplierReturn: return const Color(0xFFF97316);
+      case TransactionType.stockCount: return const Color(0xFF8B5CF6);
+      case TransactionType.openingBalance: return const Color(0xFF6366F1);
+    }
+  }
+
+  Widget _summaryRow(TransactionType t) {
+    final count = _filteredMovements.where((m) => m['transaction_type'] == t.value).length;
+    final color = _typeColor(t);
     return Row(children: [
-      Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Center(child: Text(label.substring(0, 1), style: GoogleFonts.cairo(fontWeight: FontWeight.w800, color: color, fontSize: 16)))),
+      Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Center(child: Text(t.displayName.substring(0, 1), style: GoogleFonts.cairo(fontWeight: FontWeight.w800, color: color, fontSize: 16)))),
       const SizedBox(width: 12),
-      Expanded(child: Text(label, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 14))),
-      Text(qty is double ? qty.toStringAsFixed(0) : qty, style: GoogleFonts.cairo(fontWeight: FontWeight.w800, fontSize: 18, color: color)),
-      const SizedBox(width: 8),
-      Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Text('$count', style: GoogleFonts.cairo(fontSize: 11, color: color, fontWeight: FontWeight.w600))),
+      Expanded(child: Text(t.displayName, style: GoogleFonts.cairo(fontWeight: FontWeight.w700, fontSize: 13))),
+      Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Text('$count', style: GoogleFonts.cairo(fontSize: 13, color: color, fontWeight: FontWeight.w800))),
     ]);
   }
 }

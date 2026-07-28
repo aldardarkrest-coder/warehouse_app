@@ -49,103 +49,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Welcome Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1A56DB), Color(0xFF3B82F6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1A56DB).withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'لوحة التحكم',
-                  style: GoogleFonts.cairo(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'مرحباً بك في نظام إدارة المخزون',
-                  style: GoogleFonts.cairo(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
-                ),
-              ],
-            ),
-          ),
+          _buildHeader(),
           const SizedBox(height: 20),
-          // Stats Grid
-          Row(
-            children: [
-              Expanded(child: _StatCard(
-                icon: Icons.inventory_2_rounded, label: 'إجمالي الأصناف',
-                value: '$totalItems', color: const Color(0xFF1A56DB),
-              )),
-              const SizedBox(width: 12),
-              Expanded(child: _StatCard(
-                icon: Icons.warehouse_rounded, label: 'المستودعات',
-                value: '$totalWarehouses', color: const Color(0xFF10B981),
-              )),
-              const SizedBox(width: 12),
-              Expanded(child: _StatCard(
-                icon: Icons.warning_amber_rounded, label: 'مخزون منخفض',
-                value: '$lowStockCount',
-                color: lowStockCount > 0 ? const Color(0xFFEF4444) : const Color(0xFF9CA3AF),
-              )),
-            ],
-          ),
+          _buildStatsRow(totalItems, totalWarehouses, lowStockCount, recentTransactions.length),
           const SizedBox(height: 24),
-          // Recent Movements Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'آخر الحركات',
-                style: GoogleFonts.cairo(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1F2937),
-                ),
-              ),
-              if (recentTransactions.isNotEmpty)
-                TextButton(
-                  onPressed: () {},
-                  child: Text('عرض الكل', style: GoogleFonts.cairo(color: const Color(0xFF1A56DB), fontWeight: FontWeight.w600)),
-                ),
-            ],
-          ),
+          _buildRecentHeader(recentTransactions),
           const SizedBox(height: 8),
           if (recentTransactions.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
-              child: Column(
-                children: [
-                  Icon(Icons.swap_horiz_rounded, size: 48, color: Colors.grey.shade300),
-                  const SizedBox(height: 12),
-                  Text('لا توجد حركات بعد', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 14)),
-                ],
-              ),
-            )
+            _emptyState()
           else
             ...recentTransactions.map((m) => _TransactionCard(transaction: m)),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A56DB), Color(0xFF3B82F6)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: const Color(0xFF1A56DB).withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('لوحة التحكم', style: GoogleFonts.cairo(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 4),
+          Text('نظام إدارة المخزون', style: GoogleFonts.cairo(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsRow(int items, int whs, int lowStock, int txCount) {
+    return Row(children: [
+      _StatCard(icon: Icons.inventory_2_rounded, label: 'الأصناف', value: '$items', color: const Color(0xFF1A56DB)),
+      const SizedBox(width: 12),
+      _StatCard(icon: Icons.warehouse_rounded, label: 'المستودعات', value: '$whs', color: const Color(0xFF10B981)),
+      const SizedBox(width: 12),
+      _StatCard(icon: Icons.swap_horiz_rounded, label: 'الحركات', value: '$txCount', color: const Color(0xFF8B5CF6)),
+    ]);
+  }
+
+  Widget _buildRecentHeader(List<InventoryTransaction> recent) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text('آخر الحركات', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
+        if (recent.isNotEmpty)
+          Text('آخر 10', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
+      ],
+    );
+  }
+
+  Widget _emptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Column(children: [
+        Icon(Icons.swap_horiz_rounded, size: 48, color: Colors.grey.shade300),
+        const SizedBox(height: 12),
+        Text('لا توجد حركات بعد', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 14)),
+      ]),
+    );
+  }
+
+  Widget _lowStockWarning(int lowStock) {
+    if (lowStock <= 0) return const SizedBox();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: const Color(0xFFEF4444).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+      child: Row(children: [
+        const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 20),
+        const SizedBox(width: 8),
+        Expanded(child: Text('$lowStock صنف بمخزون منخفض', style: GoogleFonts.cairo(color: const Color(0xFFEF4444), fontWeight: FontWeight.w600))),
+      ]),
     );
   }
 }
@@ -155,46 +142,25 @@ class _StatCard extends StatelessWidget {
   final String label;
   final String value;
   final Color color;
-
-  const _StatCard({
-    required this.icon, required this.label,
-    required this.value, required this.color,
-  });
+  const _StatCard({required this.icon, required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 24, color: color),
-          ),
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
+        ),
+        child: Column(children: [
+          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 24, color: color)),
           const SizedBox(height: 12),
-          Text(value, style: GoogleFonts.cairo(
-            fontSize: 24, fontWeight: FontWeight.w800, color: color,
-          )),
+          Text(value, style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.w800, color: color)),
           const SizedBox(height: 4),
-          Text(label, style: GoogleFonts.cairo(
-            fontSize: 12, color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w500,
-          ), textAlign: TextAlign.center),
-        ],
+          Text(label, style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
+        ]),
       ),
     );
   }
@@ -206,58 +172,48 @@ class _TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final meta = _txMeta(transaction.type);
     final isPosted = transaction.status == TransactionStatus.posted;
-    final color = isPosted ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
-    final icon = isPosted ? Icons.check_circle_rounded : Icons.schedule_rounded;
+    final statusColor = isPosted ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42, height: 42,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.type.displayName,
-                  style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '#${transaction.transactionNo ?? ''} · ${transaction.status.displayName}',
-                  style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Icon(icon, color: color, size: 20),
-              if (transaction.createdAt != null)
-                Text(
-                  '${transaction.createdAt!.day}/${transaction.createdAt!.month}/${transaction.createdAt!.year}',
-                  style: GoogleFonts.cairo(color: const Color(0xFFD1D5DB), fontSize: 11),
-                ),
-            ],
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+      child: Row(children: [
+        Container(width: 42, height: 42, decoration: BoxDecoration(color: meta.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(meta.icon, color: meta.color, size: 20)),
+        const SizedBox(width: 12),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(transaction.type.displayName, style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14)),
+          const SizedBox(height: 2),
+          Text('#${transaction.transactionNo ?? ''} · ${transaction.status.displayName}', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12)),
+        ])),
+        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+          Icon(isPosted ? Icons.check_circle_rounded : Icons.schedule_rounded, color: statusColor, size: 20),
+          if (transaction.createdAt != null)
+            Text('${transaction.createdAt!.day}/${transaction.createdAt!.month}/${transaction.createdAt!.year}', style: GoogleFonts.cairo(color: const Color(0xFFD1D5DB), fontSize: 11)),
+        ]),
+      ]),
     );
   }
+}
+
+_TxMeta _txMeta(TransactionType t) {
+  switch (t) {
+    case TransactionType.purchaseReceipt: return _TxMeta(Icons.shopping_cart_rounded, Color(0xFF10B981));
+    case TransactionType.salesIssue: return _TxMeta(Icons.point_of_sale_rounded, Color(0xFFEF4444));
+    case TransactionType.transfer: return _TxMeta(Icons.swap_horiz_rounded, Color(0xFFF59E0B));
+    case TransactionType.adjustmentIn: return _TxMeta(Icons.add_circle_rounded, Color(0xFF22C55E));
+    case TransactionType.adjustmentOut: return _TxMeta(Icons.remove_circle_rounded, Color(0xFFDC2626));
+    case TransactionType.customerReturn: return _TxMeta(Icons.assignment_return_rounded, Color(0xFF3B82F6));
+    case TransactionType.supplierReturn: return _TxMeta(Icons.assignment_return_rounded, Color(0xFFF97316));
+    case TransactionType.stockCount: return _TxMeta(Icons.inventory_2_rounded, Color(0xFF8B5CF6));
+    case TransactionType.openingBalance: return _TxMeta(Icons.balance_rounded, Color(0xFF6366F1));
+  }
+}
+
+class _TxMeta {
+  final IconData icon;
+  final Color color;
+  const _TxMeta(this.icon, this.color);
 }

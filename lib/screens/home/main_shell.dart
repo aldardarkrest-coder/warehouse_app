@@ -12,6 +12,7 @@ import '../suppliers/suppliers_list_screen.dart';
 import '../customers/customers_list_screen.dart';
 import '../inventory/movements_list_screen.dart';
 import '../inventory/movement_form_screen.dart';
+import '../../models/inventory_transaction.dart';
 import '../reports/reports_screen.dart';
 import '../users/users_management_screen.dart';
 import '../branches/branches_list_screen.dart';
@@ -537,7 +538,7 @@ class _MainShellState extends State<MainShell> {
       3 => WarehouseFormScreen(authService: widget.authService),
       4 => SupplierFormScreen(authService: widget.authService),
       5 => CustomerFormScreen(authService: widget.authService),
-      6 => MovementFormScreen(authService: widget.authService, initialType: 'in'),
+      6 => MovementFormScreen(authService: widget.authService, initialType: TransactionType.purchaseReceipt),
       8 => BranchFormScreen(authService: widget.authService),
       9 => UnitFormScreen(authService: widget.authService),
       _ => const SizedBox.shrink(),
@@ -570,9 +571,9 @@ class _MainShellState extends State<MainShell> {
                 decoration: BoxDecoration(color: const Color(0xFF10B981).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                 child: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF10B981)),
               ),
-              title: Text('حركة إدخال', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
-              subtitle: Text('إضافة كمية للمخزون', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
-              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(builder: (_) => MovementFormScreen(authService: widget.authService, initialType: 'in'))); },
+              title: Text('إيصال استلام', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+              subtitle: Text('استلام بضاعة من مورد', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
+              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(builder: (_) => MovementFormScreen(authService: widget.authService, initialType: TransactionType.purchaseReceipt))); },
             ),
             ListTile(
               leading: Container(
@@ -580,9 +581,9 @@ class _MainShellState extends State<MainShell> {
                 decoration: BoxDecoration(color: const Color(0xFFEF4444).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                 child: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFFEF4444)),
               ),
-              title: Text('حركة إخراج', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
-              subtitle: Text('صرف كمية من المخزون', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
-              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(builder: (_) => MovementFormScreen(authService: widget.authService, initialType: 'out'))); },
+              title: Text('صرف مبيعات', style: GoogleFonts.cairo(fontWeight: FontWeight.w600)),
+              subtitle: Text('صرف بضاعة لعميل', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
+              onTap: () { Navigator.pop(ctx); Navigator.of(context).push(MaterialPageRoute(builder: (_) => MovementFormScreen(authService: widget.authService, initialType: TransactionType.salesIssue))); },
             ),
             ListTile(
               leading: Container(

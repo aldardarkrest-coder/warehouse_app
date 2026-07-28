@@ -6,6 +6,24 @@ import '../../models/inventory_transaction.dart';
 import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 
+const _typeMeta = {
+  TransactionType.purchaseReceipt: _TM(Icons.shopping_cart_rounded, Color(0xFF10B981)),
+  TransactionType.salesIssue: _TM(Icons.point_of_sale_rounded, Color(0xFFEF4444)),
+  TransactionType.transfer: _TM(Icons.swap_horiz_rounded, Color(0xFFF59E0B)),
+  TransactionType.adjustmentIn: _TM(Icons.add_circle_rounded, Color(0xFF22C55E)),
+  TransactionType.adjustmentOut: _TM(Icons.remove_circle_rounded, Color(0xFFDC2626)),
+  TransactionType.customerReturn: _TM(Icons.assignment_return_rounded, Color(0xFF3B82F6)),
+  TransactionType.supplierReturn: _TM(Icons.assignment_return_rounded, Color(0xFFF97316)),
+  TransactionType.stockCount: _TM(Icons.inventory_2_rounded, Color(0xFF8B5CF6)),
+  TransactionType.openingBalance: _TM(Icons.balance_rounded, Color(0xFF6366F1)),
+};
+
+class _TM {
+  final IconData icon;
+  final Color color;
+  const _TM(this.icon, this.color);
+}
+
 class MovementsListScreen extends StatefulWidget {
   final AuthService authService;
   const MovementsListScreen({super.key, required this.authService});
@@ -50,9 +68,8 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
               itemCount: _transactions!.length,
               itemBuilder: (_, i) {
                 final m = _transactions![i];
-                final isPost = m.status == TransactionStatus.posted;
-                final isDraft = m.status == TransactionStatus.draft;
-                final color = isDraft ? Colors.grey : const Color(0xFF10B981);
+                final meta = _typeMeta[m.type] ?? _TM(Icons.receipt_long_rounded, Colors.grey);
+                final isPosted = m.status == TransactionStatus.posted;
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -67,10 +84,10 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
                       Container(
                         width: 42, height: 42,
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.1),
+                          color: meta.color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Icon(Icons.receipt_long_rounded, color: color, size: 20),
+                        child: Icon(meta.icon, color: meta.color, size: 20),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -96,8 +113,8 @@ class _MovementsListScreenState extends State<MovementsListScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Icon(
-                            isPost ? Icons.check_circle_rounded : Icons.schedule_rounded,
-                            color: isPost ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                            isPosted ? Icons.check_circle_rounded : Icons.schedule_rounded,
+                            color: isPosted ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
                             size: 20,
                           ),
                           if (m.createdAt != null)
