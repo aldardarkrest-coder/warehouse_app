@@ -131,12 +131,15 @@ class _MovementFormScreenState extends State<MovementFormScreen> {
       final qty = double.parse(_quantityController.text);
       final item = _items.firstWhere((i) => i.id == _itemId);
 
-      final itemUnits = await Supabase.instance.client
-          .from('item_units')
-          .select('id, is_base')
-          .eq('item_id', _itemId);
-      final baseItemUnit = (itemUnits as List).firstWhere((u) => u['is_base'] == true, orElse: () => itemUnits.first);
-      final itemUnitId = baseItemUnit['id'] as String;
+      final allIu = await Supabase.instance.client.from('item_units').select('id, is_base, item_id').limit(100);
+      final iuList = allIu as List;
+      dynamic itemUnitRow;
+      try {
+        itemUnitRow = iuList.firstWhere((u) => u['item_id'] == _itemId && u['is_base'] == true);
+      } catch (_) {
+        itemUnitRow = iuList.firstWhere((u) => u['item_id'] == _itemId);
+      }
+      final itemUnitId = itemUnitRow['id'] as String;
 
       final tx = await service.createTransaction(InventoryTransaction(
         branchId: branchId,
