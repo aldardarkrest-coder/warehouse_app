@@ -58,6 +58,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   _infoRow(context, 'الوحدة', widget.item.baseUnitName ?? widget.item.baseUnitSymbol ?? ''),
                   _infoRow(context, 'الحد الأدنى', widget.item.minStockLevel.toString()),
                   if (widget.item.description != null) _infoRow(context, 'الوصف', widget.item.description!),
+                  _infoRow(context, 'تتبع Batch', widget.item.trackBatch ? 'نعم' : 'لا'),
+                  _infoRow(context, 'تتبع صلاحية', widget.item.trackExpiry ? 'نعم' : 'لا'),
                 ],
               ),
             ),

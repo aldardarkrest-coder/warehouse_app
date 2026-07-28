@@ -14,6 +14,10 @@ import '../inventory/movements_list_screen.dart';
 import '../inventory/movement_form_screen.dart';
 import '../reports/reports_screen.dart';
 import '../users/users_management_screen.dart';
+import '../branches/branches_list_screen.dart';
+import '../branches/branch_form_screen.dart';
+import '../units/units_list_screen.dart';
+import '../units/unit_form_screen.dart';
 import '../items/item_form_screen.dart';
 import '../categories/category_form_screen.dart';
 import '../warehouses/warehouse_form_screen.dart';
@@ -80,6 +84,8 @@ class _MainShellState extends State<MainShell> {
     _NavItem(icon: Icons.people_outline, selectedIcon: Icons.people_rounded, label: 'العملاء', color: const Color(0xFFEC4899)),
     _NavItem(icon: Icons.swap_horiz_outlined, selectedIcon: Icons.swap_horiz_rounded, label: 'الحركات', color: const Color(0xFFEF4444)),
     _NavItem(icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart_rounded, label: 'التقارير', color: const Color(0xFF6366F1)),
+    _NavItem(icon: Icons.business_outlined, selectedIcon: Icons.business_rounded, label: 'الفروع', color: const Color(0xFF3B82F6)),
+    _NavItem(icon: Icons.straighten_outlined, selectedIcon: Icons.straighten_rounded, label: 'الوحدات', color: const Color(0xFF8B5CF6)),
     if (_isAdmin)
       _NavItem(icon: Icons.admin_panel_settings_outlined, selectedIcon: Icons.admin_panel_settings_rounded, label: 'المستخدمين', color: const Color(0xFF7C3AED)),
   ];
@@ -131,7 +137,7 @@ class _MainShellState extends State<MainShell> {
                 ),
               ),
             ),
-          if (_isManagerOrAdmin && _selectedIndex <= 6)
+          if (_isManagerOrAdmin && _selectedIndex >= 1 && _selectedIndex <= 9 && _selectedIndex != 7)
             IconButton(
               icon: const Icon(Icons.add_circle_rounded),
               tooltip: 'إضافة ${_navItems[_selectedIndex].label}',
@@ -180,7 +186,7 @@ class _MainShellState extends State<MainShell> {
         ],
       ),
       drawer: isWide ? null : _buildDrawer(context),
-      floatingActionButton: (_isManagerOrAdmin && _selectedIndex <= 6)
+      floatingActionButton: (_isManagerOrAdmin && _selectedIndex >= 1 && _selectedIndex <= 9 && _selectedIndex != 7)
           ? FloatingActionButton.extended(
               onPressed: _onAddPressed,
               backgroundColor: _navItems[_selectedIndex].color,
@@ -204,6 +210,8 @@ class _MainShellState extends State<MainShell> {
                 CustomersListScreen(authService: widget.authService),
                 MovementsListScreen(authService: widget.authService),
                 ReportsScreen(authService: widget.authService),
+                BranchesListScreen(authService: widget.authService),
+                UnitsListScreen(authService: widget.authService),
                 if (_isAdmin) UsersManagementScreen(authService: widget.authService),
               ],
             ),
@@ -530,6 +538,8 @@ class _MainShellState extends State<MainShell> {
       4 => SupplierFormScreen(authService: widget.authService),
       5 => CustomerFormScreen(authService: widget.authService),
       6 => MovementFormScreen(authService: widget.authService, initialType: 'in'),
+      8 => BranchFormScreen(authService: widget.authService),
+      9 => UnitFormScreen(authService: widget.authService),
       _ => const SizedBox.shrink(),
     };
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));

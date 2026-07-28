@@ -28,6 +28,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
   String? _categoryId;
   String? _baseUnitId;
   bool _isActive = true;
+  bool _trackBatch = false;
+  bool _trackExpiry = false;
   bool _isLoading = false;
   bool _catLoading = true;
   bool _unitLoading = true;
@@ -47,6 +49,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
       _baseUnitId = widget.item!.baseUnitId;
       _minStockController.text = widget.item!.minStockLevel.toString();
       _isActive = widget.item!.isActive;
+      _trackBatch = widget.item!.trackBatch;
+      _trackExpiry = widget.item!.trackExpiry;
     }
     _loadCategories();
     _loadUnits();
@@ -92,6 +96,8 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
         sku: _skuController.text.trim(),
         categoryId: _categoryId,
         baseUnitId: _baseUnitId!,
+        trackBatch: _trackBatch,
+        trackExpiry: _trackExpiry,
         minStockLevel: double.tryParse(_minStockController.text) ?? 0,
         isActive: _isActive,
       );
@@ -156,6 +162,9 @@ class _ItemFormScreenState extends State<ItemFormScreen> {
               ),
               const SizedBox(height: 16),
               SwitchListTile(title: const Text('نشط'), value: _isActive, onChanged: (v) => setState(() => _isActive = v)),
+              const Divider(height: 24),
+              SwitchListTile(title: const Text('تتبع رقم التشغيلة (Batch)'), subtitle: Text('يتطلب إدخال رقم تشغيلة عند الحركة', style: GoogleFonts.cairo(fontSize: 12)), value: _trackBatch, onChanged: (v) => setState(() => _trackBatch = v)),
+              SwitchListTile(title: const Text('تتبع تاريخ الصلاحية'), subtitle: Text('يتطلب إدخال تاريخ صلاحية عند الحركة', style: GoogleFonts.cairo(fontSize: 12)), value: _trackExpiry, onChanged: (v) => setState(() => _trackExpiry = v)),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity, height: 48,
