@@ -1,10 +1,7 @@
-import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:excel/excel.dart' as xl;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -90,7 +87,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
   _EntityConfig get _cfg => _entities[_current];
   List<_Col> get _cols => _cfg.columns;
   List<String> get _headers => _cols.map((c) => c.label).toList();
-  List<List<String>> get _rows => _filtered.map((i) => _cols.map((c) => c.get(_allData[i])).toList()).toList();
 
   @override
   void initState() { super.initState(); _load(); }
@@ -121,7 +117,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
   bool get _someSelected => _filtered.any((i) => _selectedIds.contains(_idOf(_allData[i])));
 
   String _idOf(dynamic item) => item.id as String? ?? '';
-  String _val(dynamic item, _Col col) => col.get(item);
 
   @override
   Widget build(BuildContext context) {
@@ -298,7 +293,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
               const SizedBox(height: 12),
               Text('تصدير ${_cfg.label} ($count)', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
               const SizedBox(height: 16),
-              _exportTile(Icons.table_chart_rounded, 'Excel (.xlsx)', const Color(0xFF10B981), _exportExcel),
               _exportTile(Icons.description_rounded, 'CSV (.csv)', const Color(0xFF3B82F6), _exportCsv),
               _exportTile(Icons.picture_as_pdf_rounded, 'PDF (.pdf)', const Color(0xFFEF4444), _exportPdf),
               _exportTile(Icons.print_rounded, 'طباعة', const Color(0xFF8B5CF6), _print),
@@ -345,24 +339,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     for (final row in rows) {
       buf.writeln(row.map(_escapeCsv).join(','));
     }
-    final file = File('${Directory.systemTemp.path}/${_cfg.label}.csv');
-    await file.writeAsString(buf.toString(), encoding: utf8);
-    await Printing.shareFile(bytes: await file.readAsBytes(), filename: '${_cfg.label}.csv');
-  }
-
-  Future<void> _exportExcel() async {
-    final items = _exportItems;
-    if (items.isEmpty) return;
-    final rows = _exportRows(items);
-    final excel = xl.Excel.createExcel();
-    final sheet = excel[_cfg.label];
-    sheet.appendRow(_headers.map((h) => xl.TextCellValue(h)).toList());
-    for (final row in rows) {
-      sheet.appendRow(row.map((c) => xl.TextCellValue(c)).toList());
-    }
-    final raw = excel.save();
-    if (raw == null) return;
-    await Printing.shareFile(bytes: Uint8List.fromList(raw), filename: '${_cfg.label}.xlsx');
+    await Clipboard.setData(ClipboardData(text: buf.toString()));
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم نسخ البيانات إلى الحافظة')));
   }
 
   Future<void> _exportPdf() async {
@@ -374,7 +352,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(32),
       build: (ctx) => [
-        pw.Header(level: 0, child: pw.Text('تقرير ${_cfg.label}', style: pw.TextStyle(fontSize: 18))),
+        pw.Text('تقرير ${_cfg.label}', style: pw.TextStyle(fontSize: 18)),
         pw.SizedBox(height: 4),
         pw.Text('تاريخ التقرير: ${DateFormat('yyyy/MM/dd').format(DateTime.now())} - إجمالي السجلات: ${items.length}',
             style: pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
@@ -394,7 +372,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(32),
       build: (ctx) => [
-        pw.Header(level: 0, child: pw.Text('تقرير ${_cfg.label}', style: pw.TextStyle(fontSize: 18))),
+        pw.Text('تقرير ${_cfg.label}', style: pw.TextStyle(fontSize: 18)),
         pw.SizedBox(height: 4),
         pw.Text('تاريخ التقرير: ${DateFormat('yyyy/MM/dd').format(DateTime.now())}',
             style: pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
@@ -411,10 +389,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
       data: rows,
       headerStyle: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
       cellStyle: pw.TextStyle(fontSize: 8),
-      headerDecoration: pw.BoxDecoration(color: PdfColors.blue, borderRadius: pw.BorderRadius.all(pw.Radius.circular(2))),
-      border: pw.TableBorder(bottom: pw.BorderSide(color: PdfColors.grey, width: 0.5)),
+      headerDecoration: pw.BoxDecoration(color: PdfColors.blue),
       headerHeight: 28,
-      cellPadding: pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
     );
   }
 }
