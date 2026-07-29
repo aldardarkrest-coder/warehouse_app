@@ -38,6 +38,15 @@ jobs:
           flutter create --project-name warehouse_app --platforms=android .
           rm -f test/widget_test.dart
 
+      - name: التحقق من الملفات
+        run: |
+          echo "=== lib/screens structure ==="
+          find lib/screens -type f 2>/dev/null || ls -R lib/screens/
+          echo "=== reports_screen.dart check ==="
+          test -f lib/screens/reports/reports_screen.dart && echo "EXISTS" || echo "MISSING"
+          echo "=== main_shell.dart line 16 ==="
+          head -20 lib/screens/home/main_shell.dart
+
       - name: تحليل الكود
         id: analyze
         run: |
