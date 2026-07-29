@@ -47,9 +47,9 @@ jobs:
       - name: عرض نتائج التحليل
         if: always() && steps.analyze.outcome == 'failure'
         run: |
-          errors=$(cat flutter_analyze_output.txt)
-          echo "::error file=analysis.txt,title=flutter analyze::$errors"
-          echo "$errors" >> $GITHUB_STEP_SUMMARY
+          while IFS= read -r line || [ -n "$line" ]; do
+            printf '::error title=flutter analyze::%s\n' "$line"
+          done < flutter_analyze_output.txt
 
       - name: بناء APK
         run: flutter build apk --debug
