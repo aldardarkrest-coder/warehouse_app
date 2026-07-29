@@ -39,14 +39,27 @@ jobs:
           rm -f test/widget_test.dart
 
       - name: تحليل الكود
-        run: flutter analyze 2>&1 | tee flutter_analyze_output.txt; exit ${PIPESTATUS[0]}
+        id: analyze
+        run: |
+          flutter analyze 2>&1 | tee flutter_analyze_output.txt
+          exit ${PIPESTATUS[0]}
 
-      - name: رفع نتائج التحليل
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-analyze-output
-          path: flutter_analyze_output.txt
+      - name: عرض نتائج التحليل
+        if: failure() && steps.analyze.outcome == 'failure'
+        run: |
+          echo "### Flutter Analyze Results" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat flutter_analyze_output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          # Also create error annotations for each line
+          while IFS= read -r line; do
+            if echo "$line" | grep -qE "^lib/"; then
+              file=$(echo "$line" | cut -d: -f1)
+              lineno=$(echo "$line" | cut -d: -f2)
+              msg=$(echo "$line" | sed 's/^[^:]*:[^:]*:[^:]*: //')
+              echo "::error file=$file,line=$lineno,title=flutter analyze::$msg"
+            fi
+          done < flutter_analyze_output.txt
 
       - name: بناء APK
         run: flutter build apk --debug
