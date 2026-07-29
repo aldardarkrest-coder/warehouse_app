@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../services/item_service.dart';
@@ -106,7 +105,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void _filter() {
     final q = _query.trim().toLowerCase();
     _filtered = List.generate(_allData.length, (i) => i)
-        .where((i) => q.isEmpty || _cols.any((c) => c.get(_allData[i]).toLowerCase().contains(q)))
+        .where((i) => q.isEmpty || _cols.any((c) => c.fn(_allData[i]).toLowerCase().contains(q)))
         .toList();
   }
 
@@ -227,7 +226,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               cells: [
                 DataCell(Checkbox(value: checked, onChanged: (_) => setState(() => checked ? _selectedIds.remove(id) : _selectedIds.add(id)))),
                 ..._cols.map((c) {
-                  final v = c.get(item);
+                  final v = c.fn(item);
                   final rich = q.isNotEmpty && v.toLowerCase().contains(q);
                   return DataCell(rich ? RichText(text: _highlight(v, q)) : Text(v));
                 }),
@@ -252,8 +251,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
 class _Col {
   final String label;
-  final String Function(dynamic) get;
-  const _Col(this.label, this.get);
+  final String Function(dynamic) fn;
+  const _Col(this.label, this.fn);
 }
 
 class _EntityConfig {
