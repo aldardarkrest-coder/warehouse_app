@@ -369,7 +369,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final items = _exportItems;
     if (items.isEmpty) return;
     final rows = _exportRows(items);
-    final font = await PdfGoogleFonts.cairo();
+    final font = await pw.GoogleFonts.cairo();
     final doc = pw.Document();
     doc.addPage(pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -380,17 +380,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         pw.Text('تاريخ التقرير: ${DateFormat('yyyy/MM/dd').format(DateTime.now())} - إجمالي السجلات: ${items.length}',
             style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey)),
         pw.SizedBox(height: 16),
-        pw.TableHelper.fromTextArray(
-          headers: _headers,
-          data: rows,
-          headerStyle: pw.TextStyle(font: font, fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-          cellStyle: pw.TextStyle(font: font, fontSize: 8),
-          headerDecoration: const pw.BoxDecoration(color: PdfColors.blue, borderRadius: pw.BorderRadius.all(pw.Radius.circular(2))),
-          cellAlignments: Map.fromIterables(_headers, List.filled(_headers.length, pw.Align.center)),
-          border: const pw.TableBorder(bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
-          headerHeight: 28,
-          cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-        ),
+        _buildPdfTable(font, rows),
       ],
     ));
     await Printing.sharePdf(bytes: await doc.save(), filename: '${_cfg.label}.pdf');
@@ -400,7 +390,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final items = _exportItems;
     if (items.isEmpty) return;
     final rows = _exportRows(items);
-    final font = await PdfGoogleFonts.cairo();
+    final font = await pw.GoogleFonts.cairo();
     final doc = pw.Document();
     doc.addPage(pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -411,20 +401,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
         pw.Text('تاريخ التقرير: ${DateFormat('yyyy/MM/dd').format(DateTime.now())}',
             style: pw.TextStyle(font: font, fontSize: 10, color: PdfColors.grey)),
         pw.SizedBox(height: 16),
-        pw.TableHelper.fromTextArray(
-          headers: _headers,
-          data: rows,
-          headerStyle: pw.TextStyle(font: font, fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-          cellStyle: pw.TextStyle(font: font, fontSize: 8),
-          headerDecoration: const pw.BoxDecoration(color: PdfColors.blue, borderRadius: pw.BorderRadius.all(pw.Radius.circular(2))),
-          cellAlignments: Map.fromIterables(_headers, List.filled(_headers.length, pw.Align.center)),
-          border: const pw.TableBorder(bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
-          headerHeight: 28,
-          cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
-        ),
+        _buildPdfTable(font, rows),
       ],
     ));
     await Printing.layoutPdf(onLayout: (_) async => doc.save());
+  }
+
+  pw.Widget _buildPdfTable(pw.Font font, List<List<String>> rows) {
+    final colIds = List.generate(_headers.length, (i) => i);
+    return pw.TableHelper.fromTextArray(
+      headers: _headers,
+      data: rows,
+      headerStyle: pw.TextStyle(font: font, fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+      cellStyle: pw.TextStyle(font: font, fontSize: 8),
+      headerDecoration: pw.BoxDecoration(color: PdfColors.blue, borderRadius: pw.BorderRadius.all(pw.Radius.circular(2))),
+      cellAlignments: Map.fromIterables(colIds, List.filled(_headers.length, pw.Alignment.center)),
+      border: pw.TableBorder(bottom: pw.BorderSide(color: PdfColors.grey, width: 0.5)),
+      headerHeight: 28,
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+    );
   }
 }
 
