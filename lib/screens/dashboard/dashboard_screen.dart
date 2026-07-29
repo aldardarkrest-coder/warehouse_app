@@ -51,10 +51,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           _buildHeader(),
           const SizedBox(height: 20),
-          _buildStatsRow(totalItems, totalWarehouses, lowStockCount, recentTransactions.length),
+          if (lowStockCount > 0) _buildLowStockBanner(lowStockCount),
+          if (lowStockCount > 0) const SizedBox(height: 12),
+          _buildGrid(totalItems, totalWarehouses, lowStockCount, recentTransactions.length),
           const SizedBox(height: 24),
-          _buildRecentHeader(recentTransactions),
-          const SizedBox(height: 8),
+          _buildSectionHeader('آخر الحركات', recentTransactions.isNotEmpty ? 'آخر 10' : null),
+          const SizedBox(height: 12),
           if (recentTransactions.isEmpty)
             _emptyState()
           else
@@ -67,7 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF1A56DB), Color(0xFF3B82F6)],
@@ -88,23 +90,49 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildStatsRow(int items, int whs, int lowStock, int txCount) {
-    return Row(children: [
-      _StatCard(icon: Icons.inventory_2_rounded, label: 'الأصناف', value: '$items', color: const Color(0xFF1A56DB)),
-      const SizedBox(width: 12),
-      _StatCard(icon: Icons.warehouse_rounded, label: 'المستودعات', value: '$whs', color: const Color(0xFF10B981)),
-      const SizedBox(width: 12),
-      _StatCard(icon: Icons.swap_horiz_rounded, label: 'الحركات', value: '$txCount', color: const Color(0xFF8B5CF6)),
+  Widget _buildLowStockBanner(int count) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFDE68A)),
+      ),
+      child: Row(children: [
+        const Icon(Icons.warning_amber_rounded, color: Color(0xFFD97706), size: 20),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text('$count أصناف منخفضة المخزون تحتاج إلى إعادة تزويد',
+            style: GoogleFonts.cairo(color: const Color(0xFF92400E), fontSize: 13, fontWeight: FontWeight.w600)),
+        ),
+      ]),
+    );
+  }
+
+  Widget _buildGrid(int items, int whs, int lowStock, int txCount) {
+    return Column(children: [
+      Row(children: [
+        Expanded(child: _StatCard(icon: Icons.inventory_2_rounded, label: 'الأصناف', value: '$items', color: const Color(0xFF1A56DB))),
+        const SizedBox(width: 12),
+        Expanded(child: _StatCard(icon: Icons.warehouse_rounded, label: 'المستودعات', value: '$whs', color: const Color(0xFF10B981))),
+      ]),
+      const SizedBox(height: 12),
+      Row(children: [
+        Expanded(child: _StatCard(icon: Icons.warning_amber_rounded, label: 'منخفض المخزون', value: '$lowStock', color: const Color(0xFFF59E0B))),
+        const SizedBox(width: 12),
+        Expanded(child: _StatCard(icon: Icons.swap_horiz_rounded, label: 'الحركات', value: '$txCount', color: const Color(0xFF8B5CF6))),
+      ]),
     ]);
   }
 
-  Widget _buildRecentHeader(List<InventoryTransaction> recent) {
+  Widget _buildSectionHeader(String title, String? subtitle) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('آخر الحركات', style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
-        if (recent.isNotEmpty)
-          Text('آخر 10', style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
+        Text(title, style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1F2937))),
+        if (subtitle != null)
+          Text(subtitle, style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF))),
       ],
     );
   }
@@ -113,7 +141,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5E7EB))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
       child: Column(children: [
         Icon(Icons.swap_horiz_rounded, size: 48, color: Colors.grey.shade300),
         const SizedBox(height: 12),
@@ -132,22 +164,33 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
-        ),
-        child: Column(children: [
-          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, size: 24, color: color)),
-          const SizedBox(height: 12),
-          Text(value, style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.w800, color: color)),
-          const SizedBox(height: 4),
-          Text(label, style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w500), textAlign: TextAlign.center),
-        ]),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
+      child: Row(children: [
+        Container(
+          width: 44, height: 44,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 22, color: color),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w800, color: const Color(0xFF1F2937))),
+              Text(label, style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+      ]),
     );
   }
 }
@@ -165,20 +208,42 @@ class _TransactionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFE5E7EB))),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
       child: Row(children: [
-        Container(width: 42, height: 42, decoration: BoxDecoration(color: meta.color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)), child: Icon(meta.icon, color: meta.color, size: 20)),
+        Container(
+          width: 42, height: 42,
+          decoration: BoxDecoration(
+            color: meta.color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(meta.icon, color: meta.color, size: 20),
+        ),
         const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(transaction.type.displayName, style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14)),
-          const SizedBox(height: 2),
-          Text('#${transaction.transactionNo ?? ''} · ${transaction.status.displayName}', style: GoogleFonts.cairo(color: const Color(0xFF9CA3AF), fontSize: 12)),
-        ])),
-        Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          Icon(isPosted ? Icons.check_circle_rounded : Icons.schedule_rounded, color: statusColor, size: 20),
-          if (transaction.createdAt != null)
-            Text('${transaction.createdAt!.day}/${transaction.createdAt!.month}/${transaction.createdAt!.year}', style: GoogleFonts.cairo(color: const Color(0xFFD1D5DB), fontSize: 11)),
-        ]),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(transaction.type.displayName, style: GoogleFonts.cairo(fontWeight: FontWeight.w600, fontSize: 14, color: const Color(0xFF1F2937))),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text('#${transaction.transactionNo ?? ''} · ${transaction.status.displayName}',
+                  style: GoogleFonts.cairo(color: statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+        ),
+        if (transaction.createdAt != null)
+          Text('${transaction.createdAt!.day}/${transaction.createdAt!.month}/${transaction.createdAt!.year}',
+            style: GoogleFonts.cairo(color: const Color(0xFFD1D5DB), fontSize: 11)),
       ]),
     );
   }
