@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../services/auth_service.dart';
 import '../../services/item_service.dart';
 import '../../services/category_service.dart';
 import '../../services/warehouse_service.dart';
@@ -12,8 +13,8 @@ import '../../widgets/loading_widget.dart';
 import '../../widgets/error_widget.dart';
 
 class ReportsScreen extends StatefulWidget {
-  final void Function(String)? onNavigate;
-  const ReportsScreen({super.key, this.onNavigate});
+  final AuthService authService;
+  const ReportsScreen({super.key, required this.authService});
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
