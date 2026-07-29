@@ -47,16 +47,9 @@ jobs:
       - name: عرض نتائج التحليل
         if: always() && steps.analyze.outcome == 'failure'
         run: |
-          echo "عرض نتائج flutter analyze:"
-          cat flutter_analyze_output.txt
-          echo "--- END ---"
-
-      - name: رفع نتائج التحليل
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-analyze-output
-          path: flutter_analyze_output.txt
+          errors=$(cat flutter_analyze_output.txt)
+          echo "::error file=analysis.txt,title=flutter analyze::$errors"
+          echo "$errors" >> $GITHUB_STEP_SUMMARY
 
       - name: بناء APK
         run: flutter build apk --debug
