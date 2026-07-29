@@ -18,6 +18,8 @@ dependencies:
   sqflite: ^2.3.0
   path: ^1.9.0
   google_fonts: ^6.2.1
+  excel: ^4.0.0
+  printing: ^5.13.0
 
 dev_dependencies:
   flutter_test:
