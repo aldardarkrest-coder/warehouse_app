@@ -33,9 +33,22 @@ jobs:
       - name: تثبيت الاعتماديات
         run: flutter pub get
 
+      - name: تشخيص
+        run: |
+          echo "::notice title=debug::Working directory: $(pwd)"
+          echo "::notice title=debug::lib/screens contents:"
+          ls -la lib/screens/reports/
+          echo "::notice title=debug::File type:"
+          file lib/screens/reports/reports_screen.dart
+          echo "::notice title=debug::First 3 lines:"
+          head -3 lib/screens/reports/reports_screen.dart
+          echo "::notice title=debug::Flutter version:"
+          flutter --version
+
       - name: تحليل الكود
         id: analyze
         run: |
+          dart analyze lib/screens/reports/reports_screen.dart 2>&1
           flutter analyze 2>&1 | tee flutter_analyze_output.txt
           exit ${PIPESTATUS[0]}
 
